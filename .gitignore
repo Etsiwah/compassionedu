@@ -1,0 +1,47 @@
+# Dependencies
+node_modules/
+*/node_modules/
+.npm-cache/
+
+# Environment files (NEVER commit these)
+.env
+.env.local
+.env.production
+backend/.env
+frontend/.env
+frontend/.env.local
+
+# Build output
+frontend/build/
+frontend/.cache/
+
+# Uploads (user-generated content — stored on server disk or cloud)
+backend/uploads/photos/*
+backend/uploads/portfolio/*
+backend/uploads/results/*
+backend/uploads/fee-receipts/*
+backend/uploads/activities/*
+backend/uploads/beneficiary-docs/*
+backend/uploads/activity-images/*
+backend/uploads/announcement-attachments/*
+backend/uploads/cvs/*
+backend/uploads/semester-results/*
+backend/uploads/activity-posts/*
+backend/uploads/experience-posts/*
+!backend/uploads/**/.gitkeep
+
+# Logs
+*.log
+npm-debug.log*
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/settings.json
+.idea/
+
+# Test coverage
+coverage/
+.vercel
