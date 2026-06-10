@@ -8,6 +8,7 @@
 
 const express = require('express');
 const bcrypt = require('bcryptjs');
+const crypto = require('crypto');
 const authService = require('../services/authService');
 const requireAuth = require('../middleware/requireAuth');
 const { validateRegistration, validateLogin, validateChangePassword } = require('../middleware/validators');
@@ -166,6 +167,169 @@ router.post('/logout-all', requireAuth, async (req, res, next) => {
     res.status(204).send();
   } catch (err) {
     next(err);
+  }
+});
+
+/**
+ * POST /api/auth/forgot-password
+ * Body: { email }
+ * Sends password reset email if account exists
+ * Returns: 200 OK (always, to prevent email enumeration)
+ */
+router.post('/forgot-password', async (req, res, next) => {
+  try {
+    const { email } = req.body;
+    
+    if (!email) {
+      const err = new Error('Email is required');
+      err.status = 400;
+      throw err;
+    }
+
+    await authService.requestPasswordReset(email);
+    
+    // Always return success to prevent email enumeration
+    res.json({ 
+      message: 'If an account with that email exists, a password reset link has been sent.' 
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
+/**
+ * POST /api/auth/reset-password
+ * Body: { token, newPassword }
+ * Resets password using the token from email
+ * Returns: 200 OK
+ */
+router.post('/reset-password', async (req, res, next) => {
+  try {
+    const { token, newPassword } = req.body;
+    
+    if (!token || !newPassword) {
+      const err = new Error('Token and new password are required');
+      err.status = 400;
+      throw err;
+    }
+
+    if (newPassword.length < 8) {
+      const err = new Error('Password must be at least 8 characters');
+      err.status = 400;
+      throw err;
+    }
+
+    await authService.resetPassword(token, newPassword);
+    
+    res.json({ message: 'Password reset successfully. You can now log in with your new password.' });
+  } catch (err) {
+    next(err);
+  }
+});
+
+/**
+ * GET /api/auth/google
+ * Redirects to Google OAuth consent screen
+ */
+router.get('/google', (req, res) => {
+  const clientId = process.env.GOOGLE_CLIENT_ID;
+  const redirectUri = `${process.env.BACKEND_URL || 'http://localhost:4000'}/api/auth/google/callback`;
+  const scope = 'profile email';
+  const state = req.query.state || 'default'; // Can pass state for frontend navigation
+  
+  const googleAuthUrl = `https://accounts.google.com/o/oauth2/v2/auth?` +
+    `client_id=${clientId}` +
+    `&redirect_uri=${encodeURIComponent(redirectUri)}` +
+    `&response_type=code` +
+    `&scope=${encodeURIComponent(scope)}` +
+    `&state=${state}`;
+  
+  res.redirect(googleAuthUrl);
+});
+
+/**
+ * GET /api/auth/google/callback
+ * Google OAuth callback handler
+ */
+router.get('/google/callback', async (req, res, next) => {
+  try {
+    const { code } = req.query;
+    
+    if (!code) {
+      return res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:3000'}/login?error=google_auth_failed`);
+    }
+
+    // Exchange code for tokens
+    const tokenResponse = await fetch('https://oauth2.googleapis.com/token', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        code,
+        client_id: process.env.GOOGLE_CLIENT_ID,
+        client_secret: process.env.GOOGLE_CLIENT_SECRET,
+        redirect_uri: `${process.env.BACKEND_URL || 'http://localhost:4000'}/api/auth/google/callback`,
+        grant_type: 'authorization_code',
+      }),
+    });
+
+    const tokenData = await tokenResponse.json();
+    
+    if (!tokenData.access_token) {
+      return res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:3000'}/login?error=google_auth_failed`);
+    }
+
+    // Get user info from Google
+    const userInfoResponse = await fetch('https://www.googleapis.com/oauth2/v2/userinfo', {
+      headers: { Authorization: `Bearer ${tokenData.access_token}` },
+    });
+
+    const googleUser = await userInfoResponse.json();
+    
+    // Find or create user
+    let { rows } = await pool.query(
+      'SELECT id, role, name, email, is_active, deleted_at, status FROM users WHERE LOWER(email) = LOWER($1)',
+      [googleUser.email]
+    );
+
+    let user = rows[0];
+
+    if (!user) {
+      // Create new user with Google account
+      const { rows: newUserRows } = await pool.query(
+        `INSERT INTO users (role, name, email, password_hash, account_source, status, is_active)
+         VALUES ('student', $1, $2, $3, 'google', 'active', TRUE)
+         RETURNING id, role, name, email`,
+        [googleUser.name, googleUser.email, await bcrypt.hash(crypto.randomBytes(32).toString('hex'), 10)]
+      );
+      user = newUserRows[0];
+      
+      // Send welcome email
+      try {
+        const emailService = require('../services/emailService');
+        await emailService.sendWelcomeEmail(user.email, user.name);
+      } catch {}
+    } else {
+      // Check if account is active
+      if (user.status === 'pending') {
+        return res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:3000'}/login?error=account_pending`);
+      }
+      
+      if (!user.is_active || user.deleted_at) {
+        return res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:3000'}/login?error=account_inactive`);
+      }
+
+      // Update last login
+      await pool.query('UPDATE users SET last_login_at = NOW() WHERE id = $1', [user.id]);
+    }
+
+    // Issue tokens
+    const { accessToken, refreshToken } = await authService.issueTokens(user);
+
+    // Redirect to frontend with tokens
+    res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:3000'}/auth-callback?token=${accessToken}&refreshToken=${refreshToken}`);
+  } catch (err) {
+    console.error('Google OAuth error:', err);
+    res.redirect(`${process.env.FRONTEND_URL || 'http://localhost:3000'}/login?error=google_auth_failed`);
   }
 });
 

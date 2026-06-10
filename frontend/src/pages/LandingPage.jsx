@@ -9,17 +9,17 @@ export default function LandingPage() {
   const [selectedRole, setSelectedRole] = useState(null);
   const [expandedInfo, setExpandedInfo] = useState(null);
 
-  // Subtle parallax on scroll
-  useEffect(() => {
-    const hero = heroRef.current;
-    if (!hero) return;
-    const handleScroll = () => {
-      const y = window.scrollY;
-      hero.style.backgroundPositionY = `calc(50% + ${y * 0.3}px)`;
-    };
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
+  // Subtle parallax on scroll - DISABLED to prevent white space
+  // useEffect(() => {
+  //   const hero = heroRef.current;
+  //   if (!hero) return;
+  //   const handleScroll = () => {
+  //     const y = window.scrollY;
+  //     hero.style.backgroundPositionY = `calc(50% + ${y * 0.3}px)`;
+  //   };
+  //   window.addEventListener('scroll', handleScroll, { passive: true });
+  //   return () => window.removeEventListener('scroll', handleScroll);
+  // }, []);
 
   const roleDetails = {
     Student: "Students can view their academic results, track attendance, submit portfolio items, and stay updated with class announcements.",
@@ -60,24 +60,32 @@ export default function LandingPage() {
       {/* ── BACKGROUND LAYER ── */}
       <div
         ref={heroRef}
-        className="fixed inset-0 -z-10"
+        className="fixed inset-0 -z-10 w-full h-full"
         style={{
           backgroundImage: 'url(/compassion-bg.jpg)',
           backgroundSize: 'cover',
-          backgroundPosition: 'center 50%',
+          backgroundPosition: 'center center',
           backgroundRepeat: 'no-repeat',
-          transition: 'background-position 0.1s ease-out',
+          backgroundAttachment: 'fixed',
+          width: '100vw',
+          height: '100vh',
         }}
       >
         {/* Lighter overlay for brighter background */}
         <div
-          className="absolute inset-0"
-          style={{ background: 'rgba(4, 14, 35, 0.25)' }}
+          className="absolute inset-0 w-full h-full"
+          style={{ 
+            background: 'rgba(4, 14, 35, 0.25)',
+            width: '100%',
+            height: '100%'
+          }}
         />
         <div
-          className="absolute inset-0"
+          className="absolute inset-0 w-full h-full"
           style={{
             background: 'linear-gradient(160deg, rgba(7,26,62,0.3) 0%, rgba(10,35,80,0.15) 50%, rgba(4,14,35,0.25) 100%)',
+            width: '100%',
+            height: '100%'
           }}
         />
         <div

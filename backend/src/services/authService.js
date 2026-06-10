@@ -252,4 +252,112 @@ async function changePassword(userId, currentPassword, newPassword) {
   );
 }
 
-module.exports = { login, issueTokens, refreshToken, logoutAll, logoutSession, changePassword };
+/**
+ * Request a password reset token
+ * Generates a token and sends reset email
+ *
+ * @param {string} email
+ * @returns {Promise<void>}
+ */
+async function requestPasswordReset(email) {
+  const { rows } = await pool.query(
+    'SELECT id, name, email FROM users WHERE LOWER(email) = LOWER($1) AND deleted_at IS NULL',
+    [email]
+  );
+
+  // Always return success to prevent email enumeration
+  if (rows.length === 0) {
+    return;
+  }
+
+  const user = rows[0];
+  
+  // Generate secure random token
+  const resetToken = crypto.randomBytes(32).toString('hex');
+  const tokenHash = crypto.createHash('sha256').update(resetToken).digest('hex');
+  
+  // Token expires in 1 hour
+  const expiresAt = new Date();
+  expiresAt.setTime(expiresAt.getTime() + 60 * 60 * 1000);
+
+  // Store hashed token in database
+  await pool.query(
+    `INSERT INTO password_reset_tokens (user_id, token_hash, expires_at)
+     VALUES ($1, $2, $3)
+     ON CONFLICT (user_id) DO UPDATE 
+     SET token_hash = $2, expires_at = $3, created_at = NOW()`,
+    [user.id, tokenHash, expiresAt]
+  );
+
+  // Send reset email
+  const emailService = require('./emailService');
+  await emailService.sendPasswordResetEmail(user.email, resetToken, user.name);
+}
+
+/**
+ * Reset password using token
+ *
+ * @param {string} token
+ * @param {string} newPassword
+ * @returns {Promise<void>}
+ */
+async function resetPassword(token, newPassword) {
+  const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
+
+  const { rows } = await pool.query(
+    `SELECT prt.user_id, prt.expires_at, u.email
+     FROM password_reset_tokens prt
+     JOIN users u ON u.id = prt.user_id
+     WHERE prt.token_hash = $1 AND u.deleted_at IS NULL`,
+    [tokenHash]
+  );
+
+  if (rows.length === 0) {
+    const err = new Error('Invalid or expired reset token');
+    err.status = 400;
+    throw err;
+  }
+
+  const record = rows[0];
+
+  if (new Date(record.expires_at) < new Date()) {
+    // Clean up expired token
+    await pool.query('DELETE FROM password_reset_tokens WHERE user_id = $1', [record.user_id]);
+    const err = new Error('Invalid or expired reset token');
+    err.status = 400;
+    throw err;
+  }
+
+  // Hash new password
+  const newHash = await bcrypt.hash(newPassword, 10);
+  
+  // Update password and delete reset token
+  await pool.query(
+    'UPDATE users SET password_hash = $1, force_password_change = FALSE WHERE id = $2',
+    [newHash, record.user_id]
+  );
+  
+  await pool.query('DELETE FROM password_reset_tokens WHERE user_id = $1', [record.user_id]);
+
+  // Audit log
+  try {
+    const audit = require('./auditService');
+    await audit.log({ 
+      userId: record.user_id, 
+      action: 'password_reset', 
+      entityType: 'user',
+      details: { email: record.email }
+    });
+  } catch {}
+}
+
+module.exports = { 
+  login, 
+  issueTokens, 
+  refreshToken, 
+  logoutAll, 
+  logoutSession, 
+  changePassword,
+  requestPasswordReset,
+  resetPassword
+};

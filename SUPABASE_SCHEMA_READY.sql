@@ -1,6 +1,6 @@
 -- CompassionEdu School Management System
--- PostgreSQL Schema — 14 tables
--- Run via: node src/db/migrate.js
+-- PostgreSQL Schema for Supabase
+-- Copy this ENTIRE file and paste into Supabase SQL Editor
 
 -- Enable UUID generation
 CREATE EXTENSION IF NOT EXISTS "pgcrypto";
@@ -265,8 +265,6 @@ ALTER TABLE student_profiles ADD COLUMN IF NOT EXISTS academic_documents JSONB D
 
 -- ============================================================
 -- Beneficiary/student management extensions
--- Beneficiary and Student are the same entity, these tables hang
--- from users.id where users.role = 'student'.
 -- ============================================================
 CREATE TABLE IF NOT EXISTS parents_guardians (
   id                    UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -429,8 +427,8 @@ CREATE INDEX IF NOT EXISTS idx_announcements_role ON announcements(target_role);
 CREATE INDEX IF NOT EXISTS idx_refresh_tokens_user ON refresh_tokens(user_id);
 
 -- ============================================================
--- Table 17: staff_profiles
--- Extended profile data for staff members (bio, portfolio, CV, etc.)
+-- Table 18: staff_profiles
+-- Extended profile data for staff members
 -- ============================================================
 CREATE TABLE IF NOT EXISTS staff_profiles (
   user_id       UUID PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
@@ -463,7 +461,7 @@ ALTER TABLE announcements ADD CONSTRAINT announcements_target_role_check
   CHECK (target_role IN ('all','student','teacher','parent','staff'));
 
 -- ============================================================
--- Table 18: staff_work_reports
+-- Table 19: staff_work_reports
 -- Daily work reports submitted by staff members
 -- ============================================================
 CREATE TABLE IF NOT EXISTS staff_work_reports (
@@ -477,7 +475,7 @@ CREATE INDEX IF NOT EXISTS idx_work_reports_staff ON staff_work_reports(staff_id
 CREATE INDEX IF NOT EXISTS idx_work_reports_date  ON staff_work_reports(report_date DESC);
 
 -- ============================================================
--- Table 19: file_ownership
+-- Table 20: file_ownership
 -- Maps uploaded filenames to the user who uploaded them
 -- ============================================================
 CREATE TABLE IF NOT EXISTS file_ownership (
@@ -490,25 +488,8 @@ CREATE TABLE IF NOT EXISTS file_ownership (
 CREATE INDEX IF NOT EXISTS idx_file_ownership_user ON file_ownership(user_id);
 
 -- ============================================================
--- Table 20: notifications
--- In-app notifications for admins (new registrations, file uploads)
--- ============================================================
-CREATE TABLE IF NOT EXISTS notifications (
-  id         UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id    UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-  type       VARCHAR(50) NOT NULL,
-  message    TEXT NOT NULL,
-  is_read    BOOLEAN DEFAULT FALSE,
-  entity_id  UUID,
-  created_at TIMESTAMPTZ DEFAULT NOW()
-);
-CREATE INDEX IF NOT EXISTS idx_notifications_user    ON notifications(user_id);
-CREATE INDEX IF NOT EXISTS idx_notifications_unread  ON notifications(user_id, is_read) WHERE is_read = FALSE;
-CREATE INDEX IF NOT EXISTS idx_notifications_created ON notifications(created_at DESC);
-
--- ============================================================
 -- Table 21: student_health_records
--- Health records uploaded by students (insurance cards, hospital bills)
+-- Health records uploaded by students
 -- ============================================================
 CREATE TABLE IF NOT EXISTS student_health_records (
   id           UUID PRIMARY KEY DEFAULT gen_random_uuid(),

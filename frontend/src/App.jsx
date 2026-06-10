@@ -6,15 +6,18 @@ import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
 // Pages
-import LandingPage      from './pages/LandingPage';
-import LoginPage        from './pages/LoginPage';
-import StudentPortal    from './pages/StudentPortal';
-import AdminDashboard   from './pages/AdminDashboard';
-import StaffDashboard   from './pages/StaffDashboard';
-import TeacherView      from './pages/TeacherView';
-import ParentView       from './pages/ParentView';
-import SettingsPage     from './pages/SettingsPage';
-import DevAccountsPage  from './pages/DevAccountsPage';
+import LandingPage        from './pages/LandingPage';
+import LoginPage          from './pages/LoginPage';
+import ForgotPasswordPage from './pages/ForgotPasswordPage';
+import ResetPasswordPage  from './pages/ResetPasswordPage';
+import AuthCallbackPage   from './pages/AuthCallbackPage';
+import StudentPortal      from './pages/StudentPortal';
+import AdminDashboard     from './pages/AdminDashboard';
+import StaffDashboard     from './pages/StaffDashboard';
+import TeacherView        from './pages/TeacherView';
+import ParentView         from './pages/ParentView';
+import SettingsPage       from './pages/SettingsPage';
+import DevAccountsPage    from './pages/DevAccountsPage';
 
 // Route guard
 import ProtectedRoute from './components/common/ProtectedRoute';
@@ -27,8 +30,11 @@ function App() {
         <BrowserRouter>
           <Routes>
             {/* ── Public ── */}
-            <Route path="/login"        element={<LoginPage />} />
-            <Route path="/dev/accounts" element={<DevAccountsPage />} />
+            <Route path="/login"           element={<LoginPage />} />
+            <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+            <Route path="/reset-password"  element={<ResetPasswordPage />} />
+            <Route path="/auth-callback"   element={<AuthCallbackPage />} />
+            <Route path="/dev/accounts"    element={<DevAccountsPage />} />
 
             {/* ── Settings (all authenticated roles) ── */}
             <Route
