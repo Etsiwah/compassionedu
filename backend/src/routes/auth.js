@@ -20,8 +20,8 @@ const router = express.Router();
 /**
  * POST /api/auth/register
  * Body: { name, email, password, role? }
- * Self-registration — creates a PENDING account. No token is issued.
- * Admin must approve before the user can log in.
+ * Self-registration — creates an ACTIVE account and issues tokens immediately.
+ * Users can log in right away without admin approval.
  */
 router.post('/register', validateRegistration, async (req, res, next) => {
   try {
@@ -44,17 +44,20 @@ router.post('/register', validateRegistration, async (req, res, next) => {
 
     const password_hash = await bcrypt.hash(password, 10);
 
-    // Insert with status='pending' — no tokens issued
+    // Insert with status='active' and is_active=TRUE — user can log in immediately
     const { rows } = await pool.query(
       `INSERT INTO users (role, name, email, password_hash, account_source, status, is_active)
-       VALUES ($1, $2, $3, $4, 'self_registered', 'pending', FALSE)
+       VALUES ($1, $2, $3, $4, 'self_registered', 'active', TRUE)
        RETURNING id, role, name, email`,
       [userRole, name, email, password_hash]
     );
 
     const user = rows[0];
 
-    // Notify all admins about the new registration
+    // Issue tokens for immediate login
+    const { accessToken, refreshToken } = await authService.issueTokens(user);
+
+    // Notify all admins about the new registration (optional)
     try {
       await notificationService.notifyAdmins(
         'new_registration',
@@ -63,8 +66,16 @@ router.post('/register', validateRegistration, async (req, res, next) => {
       );
     } catch { /* notification failure should not block registration */ }
 
+    // Return tokens and user info for immediate login
     res.status(201).json({
-      message: 'Registration received. Your account is pending admin approval. You will be able to log in once approved.',
+      token: accessToken,
+      refreshToken,
+      user: {
+        id: user.id,
+        role: user.role,
+        name: user.name,
+        email: user.email,
+      },
     });
   } catch (err) {
     next(err);

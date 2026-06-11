@@ -134,16 +134,9 @@ export default function LoginPage() {
         role: suRole,
       });
       
-      // Registration creates a pending account, show success message
-      setSuSuccess(data.message || 'Registration received. Your account is pending admin approval.');
-      
-      // Clear form
-      setSuFirstName('');
-      setSuMiddleName('');
-      setSuLastName('');
-      setSuEmail('');
-      setSuPassword('');
-      setSuConfirm('');
+      // Registration now returns tokens - log user in immediately
+      login(data.token, data.user, data.refreshToken);
+      navigate(ROLE_REDIRECT[data.user.role] || '/login', { replace: true });
     } catch (err) {
       if (!err.response) {
         setSuError('Cannot reach the server. Make sure the backend is running.');
