@@ -32,25 +32,25 @@ export default function LandingPage() {
       id: 'history',
       title: 'History of Compassion',
       images: ['/images/history1.png', '/images/history2.png'],
-      content: 'Founded in 1952 by Rev. Everett Swanson after seeing the plight of war orphans in South Korea. What began as an effort to help 35 children has grown into a global ministry serving over 2.4 million children across 29 countries today.'
+      content: 'In 1952, Rev. Everett Swanson flew to South Korea to minister to American troops fighting in the Korean War. While there, he witnessed hundreds of war orphans living on the streets, freezing and starving, abandoned by society. Deeply moved by compassion, Swanson formed the Everett Swanson Evangelistic Association in the basement of his Chicago home. By 1961, Compassion supported 108 orphanages in South Korea. Today, this program has grown into a global child development ministry serving over 2.3 million children across 29 developing countries.'
     },
     {
       id: 'ghana',
       title: 'What Compassion Does in Ghana',
       images: ['/images/ghana.png', '/images/ghana2.jpg'],
-      content: 'Operating in Ghana since 2004, Compassion partners with over 400 local churches. They focus on holistic child development including health, education, child protection, and livelihood empowerment.'
+      content: 'Compassion partners with local churches in impoverished communities across Ghana to care for children with the love of Jesus. Whether children face hunger, sickness or hopelessness, local church staff customize care by offering meals, tutoring, medical checkups, nutrition support, and encouragement. Through holistic child development programs delivered in partnership with local churches, children are empowered to overcome poverty and help others do the same.'
     },
     {
       id: 'mission',
       title: 'Mission of Compassion',
       images: ['/images/mission.png'],
-      content: '"In response to the Great Commission, Compassion International exists as an advocate for children, to release them from their spiritual, economic, social, and physical poverty and enable them to become responsible and fulfilled Christian adults."'
+      content: 'Releasing children from poverty in Jesus\' name. Compassion believes children living in poverty should experience the fullness of life Jesus promised them (John 10:10). To make this possible, they work to restore the health, hope and opportunity that poverty has stolen from them. As a Christian charity, serving Jesus means serving the most vulnerable - providing children with meals, tutoring, medical care and encouragement they desperately need.'
     },
     {
       id: 'motto',
-      title: 'Motto of Compassion',
+      title: 'Motto & Core Values',
       images: ['/images/motto.png'],
-      content: '"Releasing children from poverty in Jesus\' name." This simple phrase captures the core identity and Christ-centered focus of the organization.'
+      content: '"Releasing children from poverty in Jesus\' name." The word "compassion" comes from the Latin "compati," meaning "to suffer with." To show compassion is to see the suffering of others, deeply care about their suffering and take action to stop it. Core values include: Christ-centered ministry, church-driven approach, child-focused care, integrity in stewardship, and loving neighbors without regard to caste, creed, class or religion.'
     }
   ];
 
