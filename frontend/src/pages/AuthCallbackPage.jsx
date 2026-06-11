@@ -45,7 +45,7 @@ export default function AuthCallbackPage() {
         const payload = JSON.parse(atob(token.split('.')[1]));
         
         // Fetch full user details from the API
-        fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:4000'}/api/users/me`, {
+        fetch(`/api/users/me`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
