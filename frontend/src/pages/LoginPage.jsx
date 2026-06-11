@@ -44,14 +44,16 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
 
   // Sign-up state
-  const [suName,     setSuName]     = useState('');
-  const [suEmail,    setSuEmail]    = useState('');
-  const [suPassword, setSuPassword] = useState('');
-  const [suConfirm,  setSuConfirm]  = useState('');
-  const [suRole,     setSuRole]     = useState('student');
-  const [suError,    setSuError]    = useState('');
-  const [suLoading,  setSuLoading]  = useState(false);
-  const [suSuccess,  setSuSuccess]  = useState('');
+  const [suFirstName,  setSuFirstName]  = useState('');
+  const [suMiddleName, setSuMiddleName] = useState('');
+  const [suLastName,   setSuLastName]   = useState('');
+  const [suEmail,      setSuEmail]      = useState('');
+  const [suPassword,   setSuPassword]   = useState('');
+  const [suConfirm,    setSuConfirm]    = useState('');
+  const [suRole,       setSuRole]       = useState('student');
+  const [suError,      setSuError]      = useState('');
+  const [suLoading,    setSuLoading]    = useState(false);
+  const [suSuccess,    setSuSuccess]    = useState('');
 
   async function doLogin(email, password) {
     setSiError('');
@@ -88,6 +90,16 @@ export default function LoginPage() {
     setSuError('');
     setSuSuccess('');
 
+    // Combine names
+    const fullName = [suFirstName, suMiddleName, suLastName]
+      .filter(n => n.trim())
+      .join(' ');
+
+    if (!fullName.trim()) {
+      setSuError('Please enter at least a first name.');
+      return;
+    }
+
     if (suPassword !== suConfirm) {
       setSuError('Passwords do not match.');
       return;
@@ -116,13 +128,22 @@ export default function LoginPage() {
     setSuLoading(true);
     try {
       const { data } = await api.post('/auth/register', {
-        name: suName,
+        name: fullName,
         email: suEmail,
         password: suPassword,
         role: suRole,
       });
-      login(data.token, data.user, data.refreshToken);
-      navigate(ROLE_REDIRECT[data.user.role] || '/login', { replace: true });
+      
+      // Registration creates a pending account, show success message
+      setSuSuccess(data.message || 'Registration received. Your account is pending admin approval.');
+      
+      // Clear form
+      setSuFirstName('');
+      setSuMiddleName('');
+      setSuLastName('');
+      setSuEmail('');
+      setSuPassword('');
+      setSuConfirm('');
     } catch (err) {
       if (!err.response) {
         setSuError('Cannot reach the server. Make sure the backend is running.');
@@ -363,21 +384,54 @@ export default function LoginPage() {
             {/* ── SIGN UP ── */}
             {tab === 'signup' && (
               <form onSubmit={handleSignUp} className="flex flex-col gap-4">
-                <div>
-                  <label htmlFor="su-name" className="block text-sm font-medium mb-1" style={{ color: 'rgba(255,255,255,0.8)' }}>
-                    Full Name
-                  </label>
-                  <input
-                    id="su-name"
-                    type="text"
-                    required
-                    autoComplete="name"
-                    value={suName}
-                    onChange={e => setSuName(e.target.value)}
-                    placeholder="John Doe"
-                    className="w-full rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
-                    style={{ background: 'rgba(255,255,255,0.12)', border: '1px solid rgba(255,255,255,0.2)', color: '#fff' }}
-                  />
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <div>
+                    <label htmlFor="su-firstname" className="block text-sm font-medium mb-1" style={{ color: 'rgba(255,255,255,0.8)' }}>
+                      First Name
+                    </label>
+                    <input
+                      id="su-firstname"
+                      type="text"
+                      required
+                      autoComplete="given-name"
+                      value={suFirstName}
+                      onChange={e => setSuFirstName(e.target.value)}
+                      placeholder="John"
+                      className="w-full rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
+                      style={{ background: 'rgba(255,255,255,0.12)', border: '1px solid rgba(255,255,255,0.2)', color: '#fff' }}
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="su-middlename" className="block text-sm font-medium mb-1" style={{ color: 'rgba(255,255,255,0.8)' }}>
+                      Middle Name
+                    </label>
+                    <input
+                      id="su-middlename"
+                      type="text"
+                      autoComplete="additional-name"
+                      value={suMiddleName}
+                      onChange={e => setSuMiddleName(e.target.value)}
+                      placeholder="(Optional)"
+                      className="w-full rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
+                      style={{ background: 'rgba(255,255,255,0.12)', border: '1px solid rgba(255,255,255,0.2)', color: '#fff' }}
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="su-lastname" className="block text-sm font-medium mb-1" style={{ color: 'rgba(255,255,255,0.8)' }}>
+                      Last Name
+                    </label>
+                    <input
+                      id="su-lastname"
+                      type="text"
+                      required
+                      autoComplete="family-name"
+                      value={suLastName}
+                      onChange={e => setSuLastName(e.target.value)}
+                      placeholder="Doe"
+                      className="w-full rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
+                      style={{ background: 'rgba(255,255,255,0.12)', border: '1px solid rgba(255,255,255,0.2)', color: '#fff' }}
+                    />
+                  </div>
                 </div>
                 <div>
                   <label htmlFor="su-email" className="block text-sm font-medium mb-1" style={{ color: 'rgba(255,255,255,0.8)' }}>
