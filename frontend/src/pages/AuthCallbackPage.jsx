@@ -40,19 +40,44 @@ export default function AuthCallbackPage() {
     }
 
     if (token && refreshToken) {
-      // Decode token to get user info
+      // Decode token to get basic user info
       try {
         const payload = JSON.parse(atob(token.split('.')[1]));
-        const user = {
-          id: payload.sub,
-          role: payload.role,
-        };
+        
+        // Fetch full user details from the API
+        fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:4000'}/api/users/me`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        })
+          .then((res) => {
+            if (!res.ok) throw new Error('Failed to fetch user details');
+            return res.json();
+          })
+          .then((userData) => {
+            const user = {
+              id: userData.id,
+              role: userData.role,
+              name: userData.name,
+              email: userData.email,
+            };
 
-        // Log in the user
-        login(token, user, refreshToken);
+            // Log in the user
+            login(token, user, refreshToken);
 
-        // Redirect to appropriate dashboard
-        navigate(ROLE_REDIRECT[user.role] || '/login', { replace: true });
+            // Redirect to appropriate dashboard
+            navigate(ROLE_REDIRECT[user.role] || '/login', { replace: true });
+          })
+          .catch((err) => {
+            console.error('Failed to fetch user details:', err);
+            // Fallback to minimal user object from token
+            const user = {
+              id: payload.sub,
+              role: payload.role,
+            };
+            login(token, user, refreshToken);
+            navigate(ROLE_REDIRECT[user.role] || '/login', { replace: true });
+          });
       } catch (err) {
         console.error('Failed to parse token:', err);
         navigate('/login?error=Authentication failed');

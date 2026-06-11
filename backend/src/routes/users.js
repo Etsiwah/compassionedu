@@ -9,7 +9,24 @@ const audit = require('../services/auditService');
 const pool = require('../db/pool');
 
 const router = express.Router();
-router.use(requireAuth, requireRole('admin'));
+
+/** GET /api/users/me - Get current user's profile (all authenticated users) */
+router.get('/me', requireAuth, async (req, res, next) => {
+  try {
+    const { rows } = await pool.query(
+      'SELECT id, role, name, email, created_at, last_login_at FROM users WHERE id = $1 AND deleted_at IS NULL',
+      [req.user.sub]
+    );
+    if (rows.length === 0) {
+      const err = new Error('User not found');
+      err.status = 404;
+      throw err;
+    }
+    res.json(rows[0]);
+  } catch (err) { next(err); }
+});
+
+router.use(requireRole('admin'));
 
 /** GET /api/users */
 router.get('/', async (req, res, next) => {
