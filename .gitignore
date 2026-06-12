@@ -11,6 +11,12 @@ backend/.env
 frontend/.env
 frontend/.env.local
 
+# Secret files - credentials and sensitive config
+RENDER_ENV_VARIABLES.txt
+PRODUCTION_TESTING_GUIDE.md
+*_CREDENTIALS.txt
+*_SECRETS.txt
+
 # Build output
 frontend/build/
 frontend/.cache/
