@@ -1,0 +1,51 @@
+RENDER ENVIRONMENT VARIABLES - Copy and paste these values
+
+Check and UPDATE these variables in your Render dashboard:
+
+1. NODE_ENV = production
+
+2. PORT = 4000
+
+3. DATABASE_URL = postgresql://postgres.pbpyptpzhmsjlzlyhoxr:GxiQSTY3AIl5aAs6@aws-0-eu-west-1.pooler.supabase.com:5432/postgres
+
+4. FRONTEND_URL = https://compassion-project-kappa.vercel.app
+
+5. ALLOWED_ORIGINS = https://compassion-project-kappa.vercel.app
+
+6. BACKEND_URL = https://compassionedu-api.onrender.com
+
+7. JWT_SECRET = compassion-edu-jwt-secret-production-2026-secure-key-xyz
+
+8. JWT_REFRESH_SECRET = compassion-edu-refresh-secret-production-2026-secure-key-abc
+
+9. JWT_EXPIRES_IN = 24h
+
+10. REFRESH_TOKEN_EXPIRES_IN = 30d
+
+11. GOOGLE_CLIENT_ID = 425237110717-8rhl0o4585rqulf4n84n5pvod6phubbu.apps.googleusercontent.com
+
+12. GOOGLE_CLIENT_SECRET = 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
+
+13. UPLOAD_DIR = uploads
+
+14. MAX_PROFILE_PHOTO_SIZE_MB = 10
+
+15. MAX_CV_SIZE_MB = 50
+
+16. MAX_MEDIA_SIZE_MB = 50
+
+17. SMTP_HOST = smtp.gmail.com
+
+18. SMTP_PORT = 587
+
+19. SMTP_SECURE = false
+
+20. SMTP_USER = kwesiyakubuetsiwah@gmail.com
+
+21. SMTP_PASS = your-gmail-app-password-here
+
+
+IMPORTANT:
+- Make sure FRONTEND_URL and ALLOWED_ORIGINS both have: https://compassion-project-kappa.vercel.app
+- Make sure NODE_ENV is set to: production
+- After updating, click "Save, rebuild, and deploy"

@@ -1,0 +1,30 @@
+# Deploy CompassionEdu Frontend to Vercel - CMD Steps
+
+## Step 1: Open Command Prompt
+1. Press Windows + R
+2. Type: cmd
+3. Press Enter
+
+## Step 2: Navigate to Frontend Folder
+cd c:\Users\kwesi\Desktop\compassionedu-main\frontend
+
+## Step 3: Deploy to Vercel Production
+npx vercel --prod
+
+## Step 4: Answer the prompts:
+When prompted, answer:
+- "Set up and deploy...?" → Press Enter (Yes)
+- "Which scope?" → Select your account (Press Enter)
+- "Link to existing project?" → Type: y (then press Enter)
+- "What's the name of your existing project?" → Type: compassion-project (then press Enter)
+
+The deployment will start and show progress. Wait for it to complete (2-3 minutes).
+
+## Step 5: Get Your Production URL
+When done, it will show:
+✅ Production: https://your-url.vercel.app
+
+Copy that URL and share it with your friend!
+
+## Troubleshooting:
+If you get an error about "Which team?", just press Enter to select your personal account.
