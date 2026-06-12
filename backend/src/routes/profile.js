@@ -199,7 +199,7 @@ router.patch(
 router.post(
   '/:userId/photos',
   requireAuth,
-  requireRole('admin', 'student'),
+  requireRole('admin', 'student', 'staff'),
   requireSelfOrAdmin,
   uploadPhoto,
   async (req, res, next) => {
@@ -233,7 +233,7 @@ router.post(
 router.post(
   '/:userId/documents',
   requireAuth,
-  requireRole('admin', 'student'),
+  requireRole('admin', 'student', 'staff'),
   requireSelfOrAdmin,
   uploadDocument,
   async (req, res, next) => {
@@ -256,7 +256,7 @@ router.post(
 router.patch(
   '/:userId/photos/:photoId/default',
   requireAuth,
-  requireRole('admin', 'student'),
+  requireRole('admin', 'student', 'staff'),
   requireSelfOrAdmin,
   async (req, res, next) => {
     try {
