@@ -6,16 +6,22 @@
 
 const nodemailer = require('nodemailer');
 
-// Create transporter
-const transporter = nodemailer.createTransporter({
-  host: process.env.SMTP_HOST || 'smtp.gmail.com',
-  port: process.env.SMTP_PORT || 587,
-  secure: process.env.SMTP_SECURE === 'true', // true for 465, false for other ports
-  auth: {
-    user: process.env.SMTP_USER,
-    pass: process.env.SMTP_PASS,
-  },
-});
+// Lazy-load transporter to avoid module load-time errors
+let transporter = null;
+function getTransporter() {
+  if (!transporter) {
+    transporter = nodemailer.createTransporter({
+      host: process.env.SMTP_HOST || 'smtp.gmail.com',
+      port: process.env.SMTP_PORT || 587,
+      secure: process.env.SMTP_SECURE === 'true', // true for 465, false for other ports
+      auth: {
+        user: process.env.SMTP_USER,
+        pass: process.env.SMTP_PASS,
+      },
+    });
+  }
+  return transporter;
+}
 
 /**
  * Send password reset email
@@ -65,7 +71,7 @@ async function sendPasswordResetEmail(email, resetToken, name) {
   };
 
   try {
-    await transporter.sendMail(mailOptions);
+    await getTransporter().sendMail(mailOptions);
     console.log(`Password reset email sent to ${email}`);
   } catch (error) {
     console.error('Error sending password reset email:', error);
@@ -113,7 +119,7 @@ async function sendWelcomeEmail(email, name) {
   };
 
   try {
-    await transporter.sendMail(mailOptions);
+    await getTransporter().sendMail(mailOptions);
     console.log(`Welcome email sent to ${email}`);
   } catch (error) {
     console.error('Error sending welcome email:', error);
@@ -210,7 +216,7 @@ async function sendAnnouncementEmails(announcement, recipients) {
     // Use Promise.allSettled to handle individual failures gracefully
     const results = await Promise.allSettled(
       batch.map(email =>
-        transporter.sendMail({
+        getTransporter().sendMail({
           from: `"CompassionEdu" <${process.env.SMTP_USER}>`,
           to: email,
           subject: subject,
