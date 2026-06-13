@@ -67,6 +67,23 @@ router.delete('/:id', requireAuth, requireRole('admin'), async (req, res, next) 
 });
 
 /**
+ * GET /api/announcements/replies
+ * Get all announcement replies (Admin only)
+ * Supports query parameters: announcement_id, user_role
+ * NOTE: This route MUST come before /:id/replies to avoid routing conflicts
+ */
+router.get('/replies', requireAuth, requireRole('admin'), async (req, res, next) => {
+  try {
+    const filters = {
+      announcement_id: req.query.announcement_id,
+      user_role: req.query.user_role
+    };
+    const replies = await replyService.getAllReplies(filters);
+    res.json(replies);
+  } catch (e) { next(e); }
+});
+
+/**
  * POST /api/announcements/:id/replies
  * Submit a reply to an announcement (Staff/Students only)
  */
@@ -79,22 +96,6 @@ router.post('/:id/replies', requireAuth, requireRole('staff', 'student'), async 
       reply_message: req.body.reply_message
     });
     res.status(201).json(reply);
-  } catch (e) { next(e); }
-});
-
-/**
- * GET /api/announcements/replies
- * Get all announcement replies (Admin only)
- * Supports query parameters: announcement_id, user_role
- */
-router.get('/replies', requireAuth, requireRole('admin'), async (req, res, next) => {
-  try {
-    const filters = {
-      announcement_id: req.query.announcement_id,
-      user_role: req.query.user_role
-    };
-    const replies = await replyService.getAllReplies(filters);
-    res.json(replies);
   } catch (e) { next(e); }
 });
 

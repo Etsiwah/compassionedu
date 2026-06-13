@@ -6,6 +6,7 @@ import api from '../utils/api';
 import useAuth from '../hooks/useAuth';
 import StaffProfileSection from './staff/ProfileSection';
 import StaffAnnouncementsSection from './staff/AnnouncementsSection';
+import StaffNotificationsSection from './staff/NotificationsSection';
 
 const LINKS = [
   { to: '/staff/dashboard',      label: 'Dashboard',     iconName: 'LayoutDashboard' },
@@ -57,14 +58,14 @@ function StaffDashboardHome() {
     <div>
       <div className="mb-6">
         <h2 className="text-xl font-bold text-white">Welcome back, {user?.name?.split(' ')[0]} 👋</h2>
-        <p className="text-sm text-white/40 mt-0.5">Here's your staff overview for today.</p>
+        <p className="text-sm text-white/40 mt-0.5">Overview</p>
       </div>
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         <MetricCard icon="🎒" label="Students"      value={metrics?.total_students}      colour="rgba(59,130,246,0.15)"  onClick={() => navigate('/staff/students')} />
         <MetricCard icon="📅" label="Attendance"    value={null}                          colour="rgba(34,197,94,0.15)"   onClick={() => navigate('/staff/attendance')} />
         <MetricCard icon="📢" label="Announcements" value={metrics?.total_announcements}  colour="rgba(168,85,247,0.15)"  onClick={() => navigate('/staff/announcements')} />
-        <MetricCard icon="🔔" label="Notifications" value="—"                             colour="rgba(249,115,22,0.15)"  onClick={() => {}} />
+        <MetricCard icon="🔔" label="Notifications" value={metrics?.unread_notifications || 0}  colour="rgba(249,115,22,0.15)"  onClick={() => navigate('/staff/notifications')} />
       </div>
 
       {/* Quick actions */}
@@ -251,6 +252,7 @@ export default function StaffDashboard() {
             <Route path="students"      element={<StudentsListSection />} />
             <Route path="attendance"    element={<AttendanceSection />} />
             <Route path="announcements" element={<StaffAnnouncementsSection />} />
+            <Route path="notifications" element={<StaffNotificationsSection />} />
             <Route path="profile"       element={<StaffProfileSection />} />
             <Route path="*"             element={<Navigate to="dashboard" replace />} />
           </Routes>

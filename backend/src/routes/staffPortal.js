@@ -68,14 +68,27 @@ router.get('/announcements', async (req, res, next) => {
  */
 router.get('/metrics', async (req, res, next) => {
   try {
-    const [studentsRes, announcementsRes] = await Promise.all([
+    const userId = req.user.sub;
+    
+    const [studentsRes, announcementsRes, unreadAnnouncementsRes] = await Promise.all([
       pool.query("SELECT COUNT(*) AS cnt FROM users WHERE role = 'student' AND deleted_at IS NULL"),
-      pool.query("SELECT COUNT(*) AS cnt FROM announcements WHERE target_role IN ('all','teacher','staff')"),
+      pool.query("SELECT COUNT(*) AS cnt FROM announcements WHERE target_role IN ('all','teacher','staff','everyone') AND deleted_at IS NULL"),
+      pool.query(
+        `SELECT COUNT(*) AS cnt FROM announcements a
+         WHERE a.target_role IN ('staff', 'everyone') 
+         AND a.deleted_at IS NULL
+         AND NOT EXISTS (
+           SELECT 1 FROM announcement_reads ar 
+           WHERE ar.announcement_id = a.id AND ar.user_id = $1
+         )`,
+        [userId]
+      ),
     ]);
 
     res.json({
       total_students:       Number(studentsRes.rows[0].cnt),
       total_announcements:  Number(announcementsRes.rows[0].cnt),
+      unread_notifications: Number(unreadAnnouncementsRes.rows[0].cnt),
     });
   } catch (err) { next(err); }
 });
