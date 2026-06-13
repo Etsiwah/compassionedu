@@ -1,175 +1,395 @@
-# CompassionEdu — Deployment Guide
+# CompassionEdu Deployment Guide
 
-Deploy the full system for free using:
-- **Render** — Backend API + PostgreSQL database
-- **Vercel** — React frontend
-- **Render Disk** — File uploads (persistent storage)
+## Overview
 
----
+This guide provides instructions for deploying the CompassionEdu application to production environments, with specific focus on Render.com deployment and email service configuration.
 
-## Step 1 — Push to GitHub
+## Table of Contents
 
-1. Go to https://github.com and create a free account if you don't have one
-2. Create a new repository called `compassionedu`
-3. Open CMD in your project folder and run:
-
-```
-git init
-git add .
-git commit -m "Initial commit"
-git branch -M main
-git remote add origin https://github.com/YOUR_USERNAME/compassionedu.git
-git push -u origin main
-```
+1. [Environment Variables](#environment-variables)
+2. [Email Service Setup](#email-service-setup)
+3. [Render.com Deployment](#rendercom-deployment)
+4. [Post-Deployment Testing](#post-deployment-testing)
 
 ---
 
-## Step 2 — Deploy Database + Backend on Render
+## Environment Variables
 
-1. Go to https://render.com and sign up (free)
-2. Click **New** → **Blueprint**
-3. Connect your GitHub account and select the `compassionedu` repository
-4. Render will detect `render.yaml` and create:
-   - A PostgreSQL database (`compassionedu-db`)
-   - A web service (`compassionedu-api`)
-5. Click **Apply** and wait ~5 minutes
+### Backend Environment Variables
 
-### After deployment:
-- Your backend URL will be: `https://compassionedu-api.onrender.com`
-- Copy this URL — you need it for Step 3
+The following environment variables must be configured in your production environment:
 
-### Run migrations + seed:
-In Render dashboard → `compassionedu-api` → **Shell** tab, run:
+#### Server Configuration
 ```
-npm run migrate
-npm run seed
+NODE_ENV=production
+PORT=4000
+```
+
+#### Database Configuration
+```
+DATABASE_URL=postgresql://user:password@host:port/database
+```
+- Use your production PostgreSQL connection string
+- For Supabase: Use the connection pooler URL for better performance
+
+#### Authentication
+```
+JWT_SECRET=<64-character-random-hex-string>
+JWT_REFRESH_SECRET=<64-character-random-hex-string>
+JWT_EXPIRES_IN=24h
+REFRESH_TOKEN_EXPIRES_IN=30d
+```
+- Generate secrets using: `node -e "console.log(require('crypto').randomBytes(64).toString('hex'))"`
+- **NEVER** use development secrets in production
+
+#### CORS Configuration
+```
+ALLOWED_ORIGINS=https://your-frontend-domain.com
+FRONTEND_URL=https://your-frontend-domain.com
+BACKEND_URL=https://your-backend-domain.com
+```
+- Replace with your actual frontend and backend URLs
+- Multiple origins can be comma-separated
+
+#### File Upload Configuration
+```
+UPLOAD_DIR=uploads
+MAX_PROFILE_PHOTO_SIZE_MB=10
+MAX_CV_SIZE_MB=50
+MAX_MEDIA_SIZE_MB=50
+```
+
+#### Email Service Configuration (Required for Announcements)
+```
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=587
+SMTP_SECURE=false
+SMTP_USER=your-email@gmail.com
+SMTP_PASS=your-app-password
+SMTP_FROM=noreply@compassionedu.com
+```
+See [Email Service Setup](#email-service-setup) section below for detailed configuration.
+
+#### OAuth Configuration (Optional)
+```
+GOOGLE_CLIENT_ID=your-google-client-id.apps.googleusercontent.com
+GOOGLE_CLIENT_SECRET=your-google-client-secret
 ```
 
 ---
 
-## Step 3 — Deploy Frontend on Vercel
+## Email Service Setup
 
-1. Go to https://vercel.com and sign up (free)
-2. Click **Add New Project** → Import from GitHub
-3. Select your `compassionedu` repository
-4. Set **Root Directory** to `frontend`
-5. Add Environment Variable:
-   - Name: `REACT_APP_API_URL`
-   - Value: `https://compassionedu-api.onrender.com/api`
-6. Click **Deploy** and wait ~3 minutes
+Email notifications are required for the announcement system (REQ-9). Configure one of the following email providers:
 
-### After deployment:
-- Your frontend URL will be: `https://compassionedu.vercel.app`
+### Option 1: Gmail SMTP (Recommended for Small Deployments)
 
----
+#### Prerequisites
+- A Gmail account
+- 2-Factor Authentication enabled
 
-## Step 4 — Update CORS on Render
+#### Setup Steps
 
-1. Go to Render → `compassionedu-api` → **Environment**
-2. Update `ALLOWED_ORIGINS` to your Vercel URL:
+1. **Enable 2-Factor Authentication**
+   - Go to: https://myaccount.google.com/security
+   - Enable 2-Step Verification
+
+2. **Generate App Password**
+   - Go to: https://myaccount.google.com/apppasswords
+   - Select "Mail" and "Other (Custom name)"
+   - Name it "CompassionEdu Production"
+   - Copy the generated 16-character password
+
+3. **Configure Environment Variables**
    ```
-   ALLOWED_ORIGINS=https://compassionedu.vercel.app
+   SMTP_HOST=smtp.gmail.com
+   SMTP_PORT=587
+   SMTP_SECURE=false
+   SMTP_USER=your-email@gmail.com
+   SMTP_PASS=<16-character-app-password>
+   SMTP_FROM=your-email@gmail.com
    ```
-3. Click **Save Changes** — the service will restart automatically
+
+#### Gmail Limitations
+- **Sending Limit**: 500 emails per day
+- **Rate Limit**: 100-150 emails per hour
+- **Best For**: Small schools (<100 users) or testing environments
+
+### Option 2: SendGrid (Recommended for Production)
+
+#### Prerequisites
+- SendGrid account (free tier: 100 emails/day)
+
+#### Setup Steps
+
+1. **Create SendGrid Account**
+   - Sign up at: https://sendgrid.com/
+
+2. **Generate API Key**
+   - Navigate to Settings → API Keys
+   - Create API Key with "Mail Send" permissions
+   - Copy the API key
+
+3. **Update Email Service Code**
+   - Modify `backend/src/services/emailService.js` to use SendGrid
+   - Install: `npm install @sendgrid/mail`
+
+4. **Configure Environment Variables**
+   ```
+   SENDGRID_API_KEY=<your-api-key>
+   SMTP_FROM=noreply@compassionedu.com
+   FRONTEND_URL=https://your-frontend-domain.com
+   ```
+
+#### SendGrid Benefits
+- **Higher Limits**: 100 emails/day (free), up to 100k/day (paid)
+- **Better Deliverability**: Dedicated IP options
+- **Analytics**: Email open/click tracking
+- **Best For**: Production deployments with >100 users
+
+### Option 3: AWS SES (Enterprise)
+
+For large-scale deployments (>10,000 users):
+- Lower cost per email
+- Requires AWS account and domain verification
+- See AWS SES documentation: https://docs.aws.amazon.com/ses/
 
 ---
 
-## Step 5 — Verify Everything Works
+## Render.com Deployment
 
-Open your Vercel URL on any device and test:
-- ✅ `https://compassionedu.vercel.app/login` — Login page loads
-- ✅ `https://compassionedu.vercel.app/dev/accounts` — Demo accounts page
-- ✅ Admin login works
-- ✅ Student login works
-- ✅ Staff login works
+### Backend Service Configuration
+
+1. **Create New Web Service**
+   - Go to Render.com dashboard
+   - Click "New +" → "Web Service"
+   - Connect your GitHub repository
+   - Select `backend` directory as root
+
+2. **Configure Build Settings**
+   ```
+   Build Command: npm install
+   Start Command: npm start
+   ```
+
+3. **Add Environment Variables**
+
+   Navigate to "Environment" tab and add the following variables:
+
+   | Variable Name | Example Value | Notes |
+   |--------------|---------------|-------|
+   | `NODE_ENV` | `production` | Required |
+   | `PORT` | `4000` | Or leave empty to use Render's default |
+   | `DATABASE_URL` | `postgresql://...` | Your PostgreSQL connection string |
+   | `JWT_SECRET` | `<random-64-char-hex>` | Generate with crypto |
+   | `JWT_REFRESH_SECRET` | `<random-64-char-hex>` | Generate with crypto |
+   | `JWT_EXPIRES_IN` | `24h` | Access token lifetime |
+   | `REFRESH_TOKEN_EXPIRES_IN` | `30d` | Refresh token lifetime |
+   | `ALLOWED_ORIGINS` | `https://your-frontend.onrender.com` | Your frontend URL |
+   | `FRONTEND_URL` | `https://your-frontend.onrender.com` | Your frontend URL |
+   | `BACKEND_URL` | `https://your-backend.onrender.com` | Your backend URL |
+   | `UPLOAD_DIR` | `uploads` | File upload directory |
+   | `MAX_PROFILE_PHOTO_SIZE_MB` | `10` | Max profile photo size |
+   | `MAX_CV_SIZE_MB` | `50` | Max CV size |
+   | `MAX_MEDIA_SIZE_MB` | `50` | Max media size |
+   | `SMTP_HOST` | `smtp.gmail.com` | SMTP server host |
+   | `SMTP_PORT` | `587` | SMTP server port |
+   | `SMTP_SECURE` | `false` | Use TLS |
+   | `SMTP_USER` | `your-email@gmail.com` | SMTP username |
+   | `SMTP_PASS` | `<app-password>` | Gmail app password |
+   | `SMTP_FROM` | `noreply@compassionedu.com` | From email address |
+   | `GOOGLE_CLIENT_ID` | `<your-client-id>` | Optional: Google OAuth |
+   | `GOOGLE_CLIENT_SECRET` | `<your-secret>` | Optional: Google OAuth |
+
+4. **Deploy**
+   - Click "Create Web Service"
+   - Wait for initial deployment to complete
+   - Note your backend URL
+
+### Frontend Service Configuration
+
+1. **Create New Static Site**
+   - Click "New +" → "Static Site"
+   - Connect repository, select `frontend` directory
+
+2. **Configure Build Settings**
+   ```
+   Build Command: npm run build
+   Publish Directory: dist
+   ```
+
+3. **Add Environment Variables**
+   ```
+   VITE_API_URL=https://your-backend.onrender.com/api
+   ```
+
+4. **Deploy**
+   - Create static site
+   - Note your frontend URL
+
+### Post-Deployment Configuration
+
+1. **Update Backend CORS**
+   - Update `ALLOWED_ORIGINS` and `FRONTEND_URL` in backend environment variables
+   - Trigger redeployment
+
+2. **Update Google OAuth (if used)**
+   - Add authorized redirect URIs in Google Console:
+     - `https://your-frontend.onrender.com`
+     - `https://your-backend.onrender.com/auth/google/callback`
 
 ---
 
-## Demo Credentials
+## Post-Deployment Testing
 
-| Role    | Email                          | Password     |
-|---------|-------------------------------|--------------|
-| Admin   | admin@compassionedu.com        | Admin@123    |
-| Staff 1 | staff1@compassionedu.com       | Staff@123    |
-| Staff 2 | staff2@compassionedu.com       | Staff@123    |
-| Student 1 | student1@compassionedu.com   | Student@123  |
-| Student 2 | student2@compassionedu.com   | Student@123  |
+### Email Service Testing
 
----
+Test email notifications to ensure proper configuration:
 
-## Environment Variables Reference
+#### 1. Test SMTP Connection
 
-### Backend (set in Render dashboard)
+Create a test script or use the admin panel to send a test announcement:
 
-| Variable | Description | Example |
-|----------|-------------|---------|
-| `DATABASE_URL` | Auto-set by Render from database | `postgresql://...` |
-| `JWT_SECRET` | Auto-generated by Render | 64-char hex |
-| `JWT_REFRESH_SECRET` | Auto-generated by Render | 64-char hex |
-| `NODE_ENV` | Set to `production` | `production` |
-| `ALLOWED_ORIGINS` | Your Vercel frontend URL | `https://compassionedu.vercel.app` |
-| `PORT` | Auto-set by Render | `4000` |
+```javascript
+// Test script: backend/test-email.js
+require('dotenv').config();
+const emailService = require('./src/services/emailService');
 
-### Frontend (set in Vercel dashboard)
+const testAnnouncement = {
+  id: 'test-123',
+  title: 'Test Announcement',
+  content: 'This is a test email from CompassionEdu',
+  created_by: 'admin-id',
+  created_at: new Date()
+};
 
-| Variable | Description | Example |
-|----------|-------------|---------|
-| `REACT_APP_API_URL` | Your Render backend URL + /api | `https://compassionedu-api.onrender.com/api` |
+const testRecipients = [
+  { email: 'test@example.com', name: 'Test User', role: 'staff' }
+];
 
----
-
-## Custom Domain (Optional)
-
-### Vercel custom domain:
-1. Vercel dashboard → Project → **Domains**
-2. Add your domain (e.g. `compassionedu.com`)
-3. Update your DNS records as instructed
-
-### Update CORS after custom domain:
-Update `ALLOWED_ORIGINS` in Render to include your custom domain:
+emailService.sendAnnouncementEmails(testAnnouncement, testRecipients)
+  .then(() => console.log('✅ Test email sent successfully'))
+  .catch(err => console.error('❌ Email failed:', err));
 ```
-ALLOWED_ORIGINS=https://compassionedu.vercel.app,https://compassionedu.com
+
+Run: `node backend/test-email.js`
+
+#### 2. Test Announcement Flow
+
+1. Log in as admin
+2. Create a test announcement targeting "Staff"
+3. Verify:
+   - ✅ Email received by staff users
+   - ✅ Email content is formatted correctly
+   - ✅ "View in System" link works
+   - ✅ Admin (creator) did NOT receive email
+   - ✅ No duplicate emails sent
+
+#### 3. Monitor Email Logs
+
+Check Render.com logs for email-related errors:
+```bash
+# In Render.com dashboard → Logs
+# Look for:
+Sent announcement emails to X recipients
+```
+
+### Common Email Issues
+
+| Issue | Possible Cause | Solution |
+|-------|---------------|----------|
+| "Invalid login" | Incorrect SMTP credentials | Verify SMTP_USER and SMTP_PASS |
+| "Authentication failed" | App password not used | Generate Gmail app password |
+| "Connection timeout" | Firewall blocking port 587 | Check network settings or use port 465 |
+| "550 Daily limit exceeded" | Gmail daily limit reached | Upgrade to SendGrid or AWS SES |
+| Emails go to spam | No SPF/DKIM records | Configure DNS or use SendGrid |
+| "SMTP_FROM not set" | Missing environment variable | Add SMTP_FROM to environment |
+
+### Health Check Endpoints
+
+Verify deployment health:
+
+```bash
+# Backend health
+curl https://your-backend.onrender.com/health
+
+# Database connectivity
+curl https://your-backend.onrender.com/api/announcements
 ```
 
 ---
 
-## Mobile Access
+## Security Best Practices
 
-The app is fully responsive and works on:
-- ✅ Android (Chrome, Firefox)
-- ✅ iPhone (Safari, Chrome)
-- ✅ Tablets
-- ✅ Desktop
+### Environment Variables
+- ✅ Never commit `.env` files to version control
+- ✅ Use different secrets for development and production
+- ✅ Rotate JWT secrets periodically
+- ✅ Use Gmail app passwords, not account passwords
+- ✅ Restrict CORS origins to known domains
 
-No app installation required — just open the URL in any browser.
+### Database
+- ✅ Use connection pooling (Supabase pooler)
+- ✅ Enable SSL for database connections
+- ✅ Regular backups
 
----
-
-## Important Notes
-
-### Free tier limitations:
-- **Render free tier**: The backend "sleeps" after 15 minutes of inactivity. First request after sleep takes ~30 seconds. Upgrade to Render Starter ($7/month) to avoid this.
-- **Render disk**: 5GB included — sufficient for photos, CVs, and documents.
-- **Vercel**: Unlimited for frontend hosting.
-
-### File uploads in production:
-Files are stored on Render's persistent disk at `/opt/render/project/src/uploads`. They persist across deployments.
-
-### Database backups:
-Render PostgreSQL free tier includes daily backups retained for 7 days.
+### Email Service
+- ✅ Use `SMTP_FROM` with your domain (not Gmail address) for better deliverability
+- ✅ Monitor email sending logs for abuse
+- ✅ Implement rate limiting if using SendGrid API directly
 
 ---
 
 ## Troubleshooting
 
-**Login fails after deployment:**
-- Check `ALLOWED_ORIGINS` includes your exact Vercel URL
-- Check `REACT_APP_API_URL` points to your Render backend
+### Backend Won't Start
+1. Check Render logs for errors
+2. Verify all required environment variables are set
+3. Test database connection string locally
 
-**"Cannot reach server" error:**
-- The Render free tier may be sleeping — wait 30 seconds and try again
-- Check Render dashboard for any deployment errors
+### Emails Not Sending
+1. Check SMTP credentials are correct
+2. Verify SMTP_FROM is set
+3. Check Render logs for email errors
+4. Test SMTP connection with telnet: `telnet smtp.gmail.com 587`
 
-**Uploads not working:**
-- Verify the Render disk is mounted at `/opt/render/project/src/uploads`
-- Check the disk is attached to the service in `render.yaml`
+### CORS Errors
+1. Verify `ALLOWED_ORIGINS` includes your frontend URL
+2. Check `FRONTEND_URL` matches actual frontend domain
+3. Ensure no trailing slashes in URLs
+
+---
+
+## Maintenance
+
+### Regular Tasks
+- Monitor email sending volume vs. provider limits
+- Review Render logs for errors
+- Check database size and performance
+- Test announcement system monthly
+- Update dependencies: `npm audit fix`
+
+### Scaling Considerations
+- **<100 users**: Gmail SMTP is sufficient
+- **100-1000 users**: Upgrade to SendGrid Free/Essentials
+- **1000-10000 users**: SendGrid Pro or AWS SES
+- **>10000 users**: AWS SES with dedicated IPs
+
+---
+
+## Support Resources
+
+- **Render.com Docs**: https://render.com/docs
+- **SendGrid Docs**: https://docs.sendgrid.com/
+- **Gmail SMTP**: https://support.google.com/mail/answer/7126229
+- **Nodemailer Docs**: https://nodemailer.com/about/
+
+---
+
+## Changelog
+
+| Date | Change | Author |
+|------|--------|--------|
+| 2024-01-XX | Initial deployment guide created | System |
+| 2024-01-XX | Email service configuration added | System |
+

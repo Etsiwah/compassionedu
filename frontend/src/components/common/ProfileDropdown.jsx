@@ -117,7 +117,7 @@ export default function ProfileDropdown() {
       {/* ── Dropdown panel ── */}
       {open && (
         <div
-          className="absolute left-0 top-full mt-2 w-72 z-50 rounded-2xl overflow-hidden"
+          className="absolute left-0 top-full mt-2 w-72 z-[60] rounded-2xl overflow-hidden"
           style={{
             backdropFilter: 'blur(24px)',
             WebkitBackdropFilter: 'blur(24px)',

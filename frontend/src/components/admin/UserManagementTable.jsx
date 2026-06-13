@@ -1,5 +1,18 @@
 import { useState, useEffect } from 'react';
 import api from '../../utils/api';
+import ResponsiveTable from '../common/ResponsiveTable';
+
+function initials(name = '') {
+  return name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
+}
+
+const roleColors = {
+  admin: 'text-purple-400 bg-purple-400/10',
+  teacher: 'text-blue-400 bg-blue-400/10',
+  staff: 'text-green-400 bg-green-400/10',
+  student: 'text-orange-400 bg-orange-400/10',
+  parent: 'text-pink-400 bg-pink-400/10',
+};
 
 export default function UserManagementTable() {
   const [query, setQuery] = useState('');
@@ -32,32 +45,64 @@ export default function UserManagementTable() {
       {loading ? (
         <p className="text-sm text-gray-400">Loading…</p>
       ) : (
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm border-collapse">
-            <thead>
-              <tr className="bg-gray-100 dark:bg-gray-700 text-left">
-                <th className="px-3 py-2">Name</th>
-                <th className="px-3 py-2">Email</th>
-                <th className="px-3 py-2">Role</th>
-                <th className="px-3 py-2" />
-              </tr>
-            </thead>
-            <tbody>
-              {users.length === 0 ? (
-                <tr><td colSpan={4} className="px-3 py-4 text-center text-gray-400">No users found.</td></tr>
-              ) : users.map(u => (
-                <tr key={u.id} className="border-t border-gray-200 dark:border-gray-600">
-                  <td className="px-3 py-2">{u.name}</td>
-                  <td className="px-3 py-2">{u.email}</td>
-                  <td className="px-3 py-2 capitalize">{u.role}</td>
-                  <td className="px-3 py-2">
-                    <button onClick={() => handleDelete(u.id)} className="text-xs text-red-500 hover:underline">Delete</button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <ResponsiveTable
+          headers={['User', 'Email', 'Role', 'Actions']}
+          data={users}
+          emptyMessage="No users found."
+          renderRow={(u) => (
+            <>
+              <td className="px-4 py-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-9 h-9 rounded-full flex-shrink-0 overflow-hidden bg-gradient-to-br from-gray-400 to-gray-600 flex items-center justify-center text-white text-xs font-bold">
+                    {initials(u.name)}
+                  </div>
+                  <p className="font-semibold text-white/90">{u.name}</p>
+                </div>
+              </td>
+              <td className="px-4 py-4 text-white/60 text-sm">{u.email}</td>
+              <td className="px-4 py-4">
+                <span className={`text-xs px-2 py-1 rounded-full font-semibold capitalize ${roleColors[u.role] || 'text-gray-400 bg-gray-400/10'}`}>
+                  {u.role}
+                </span>
+              </td>
+              <td className="px-4 py-4">
+                <button onClick={() => handleDelete(u.id)}
+                  className="px-3 py-1.5 rounded-lg text-xs font-semibold text-red-300 hover:bg-red-500/15 transition-all"
+                  style={{ border: '1px solid rgba(239,68,68,0.25)' }}>
+                  🗑️ Delete
+                </button>
+              </td>
+            </>
+          )}
+          renderMobileCard={(u) => (
+            <div className="space-y-3">
+              {/* User Info */}
+              <div className="flex items-start gap-3">
+                <div className="w-12 h-12 rounded-full flex-shrink-0 overflow-hidden bg-gradient-to-br from-gray-400 to-gray-600 flex items-center justify-center text-white text-sm font-bold">
+                  {initials(u.name)}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="font-semibold text-white/90 text-sm">{u.name}</p>
+                  <p className="text-xs text-white/50 mt-0.5 truncate">{u.email}</p>
+                  <div className="mt-2">
+                    <span className={`text-xs px-2 py-1 rounded-full font-semibold capitalize ${roleColors[u.role] || 'text-gray-400 bg-gray-400/10'}`}>
+                      {u.role}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Action Button */}
+              <div className="pt-2 border-t border-white/5">
+                <button onClick={() => handleDelete(u.id)}
+                  className="w-full px-3 py-2.5 rounded-lg text-xs font-semibold text-red-300 hover:bg-red-500/15 transition-all"
+                  style={{ border: '1px solid rgba(239,68,68,0.25)' }}>
+                  🗑️ Delete User
+                </button>
+              </div>
+            </div>
+          )}
+        />
       )}
     </div>
   );

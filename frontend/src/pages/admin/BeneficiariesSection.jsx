@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import api from '../../utils/api';
+import ResponsiveTable from '../../components/common/ResponsiveTable';
 
 const tabs = [
   'Overview',
@@ -568,53 +569,90 @@ export default function BeneficiariesSection() {
             <EmptyState title="No beneficiaries found" detail="Students appear here automatically because Beneficiary and Student are the same entity." />
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-white/10 bg-white/[0.025] text-left text-xs uppercase tracking-wide text-white/35">
-                  <th className="px-5 py-4">Beneficiary</th>
-                  <th className="px-5 py-4">ID / Project</th>
-                  <th className="px-5 py-4">Institution</th>
-                  <th className="px-5 py-4">Level</th>
-                  <th className="px-5 py-4">Sponsorship</th>
-                  <th className="px-5 py-4">Status</th>
-                  <th className="px-5 py-4">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {beneficiaries.map(row => (
-                  <tr key={row.id} className="border-b border-white/5 transition hover:bg-white/[0.035]">
-                    <td className="px-5 py-4">
-                      <button onClick={() => setSelectedId(row.id)} className="flex min-w-[220px] items-center gap-3 text-left">
-                        {row.photo_url ? (
-                          <img src={assetUrl(row.photo_url)} alt={row.name} className="h-10 w-10 rounded-full object-cover" />
-                        ) : (
-                          <span className="flex h-10 w-10 items-center justify-center rounded-full bg-orange-500 text-xs font-bold text-white">{initials(row.name)}</span>
-                        )}
-                        <span>
-                          <span className="block font-bold text-white/90">{row.name}</span>
-                          <span className="block text-xs text-white/35">{row.email}</span>
-                        </span>
-                      </button>
-                    </td>
-                    <td className="px-5 py-4 text-white/60">
-                      <p>{text(row.student_id_number)}</p>
-                      <p className="text-xs text-white/35">{text(row.project_number)}</p>
-                    </td>
-                    <td className="px-5 py-4 text-white/60">{text(row.institution)}</td>
-                    <td className="px-5 py-4 text-white/60">{text(row.level)}</td>
-                    <td className="px-5 py-4"><StatusBadge status={row.sponsorship_status} /></td>
-                    <td className="px-5 py-4"><StatusBadge status={row.status} /></td>
-                    <td className="px-5 py-4">
-                      <div className="flex flex-wrap gap-2">
-                        <button onClick={() => setSelectedId(row.id)} className="rounded-lg border border-sky-400/25 px-3 py-1.5 text-xs font-semibold text-sky-200 hover:bg-sky-500/10">Open</button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <ResponsiveTable
+            headers={['Beneficiary', 'ID / Project', 'Institution', 'Level', 'Sponsorship', 'Status', 'Actions']}
+            data={beneficiaries}
+            emptyMessage="No beneficiaries found"
+            renderRow={(row) => (
+              <>
+                <td className="px-5 py-4">
+                  <button onClick={() => setSelectedId(row.id)} className="flex min-w-[220px] items-center gap-3 text-left">
+                    {row.photo_url ? (
+                      <img src={assetUrl(row.photo_url)} alt={row.name} className="h-10 w-10 rounded-full object-cover" />
+                    ) : (
+                      <span className="flex h-10 w-10 items-center justify-center rounded-full bg-orange-500 text-xs font-bold text-white">{initials(row.name)}</span>
+                    )}
+                    <span>
+                      <span className="block font-bold text-white/90">{row.name}</span>
+                      <span className="block text-xs text-white/35">{row.email}</span>
+                    </span>
+                  </button>
+                </td>
+                <td className="px-5 py-4 text-white/60">
+                  <p>{text(row.student_id_number)}</p>
+                  <p className="text-xs text-white/35">{text(row.project_number)}</p>
+                </td>
+                <td className="px-5 py-4 text-white/60">{text(row.institution)}</td>
+                <td className="px-5 py-4 text-white/60">{text(row.level)}</td>
+                <td className="px-5 py-4"><StatusBadge status={row.sponsorship_status} /></td>
+                <td className="px-5 py-4"><StatusBadge status={row.status} /></td>
+                <td className="px-5 py-4">
+                  <div className="flex flex-wrap gap-2">
+                    <button onClick={() => setSelectedId(row.id)} className="rounded-lg border border-sky-400/25 px-3 py-1.5 text-xs font-semibold text-sky-200 hover:bg-sky-500/10">Open</button>
+                  </div>
+                </td>
+              </>
+            )}
+            renderMobileCard={(row) => (
+              <div className="space-y-3">
+                {/* Beneficiary Info */}
+                <button onClick={() => setSelectedId(row.id)} className="flex w-full items-start gap-3 text-left">
+                  {row.photo_url ? (
+                    <img src={assetUrl(row.photo_url)} alt={row.name} className="h-12 w-12 rounded-full object-cover flex-shrink-0" />
+                  ) : (
+                    <span className="flex h-12 w-12 items-center justify-center rounded-full bg-orange-500 text-sm font-bold text-white flex-shrink-0">{initials(row.name)}</span>
+                  )}
+                  <div className="flex-1 min-w-0">
+                    <p className="font-semibold text-white/90 text-sm">{row.name}</p>
+                    <p className="text-xs text-white/50 mt-0.5 truncate">{row.email}</p>
+                    <div className="flex gap-2 mt-2 flex-wrap">
+                      <StatusBadge status={row.sponsorship_status} />
+                      <StatusBadge status={row.status} />
+                    </div>
+                  </div>
+                </button>
+
+                {/* Details Grid */}
+                <div className="grid grid-cols-2 gap-3 text-xs">
+                  <div>
+                    <p className="text-white/40 mb-1">Student ID</p>
+                    <p className="text-white/70">{text(row.student_id_number)}</p>
+                  </div>
+                  <div>
+                    <p className="text-white/40 mb-1">Project #</p>
+                    <p className="text-white/70">{text(row.project_number)}</p>
+                  </div>
+                  <div>
+                    <p className="text-white/40 mb-1">Institution</p>
+                    <p className="text-white/70">{text(row.institution)}</p>
+                  </div>
+                  <div>
+                    <p className="text-white/40 mb-1">Level</p>
+                    <p className="text-white/70">{text(row.level)}</p>
+                  </div>
+                </div>
+
+                {/* Actions */}
+                <div className="pt-2 border-t border-white/5">
+                  <button 
+                    onClick={() => setSelectedId(row.id)} 
+                    className="w-full rounded-lg border border-sky-400/25 px-3 py-2.5 text-xs font-semibold text-sky-200 hover:bg-sky-500/10 transition-all">
+                    👁 Open Profile
+                  </button>
+                </div>
+              </div>
+            )}
+          />
         )}
       </Glass>
 

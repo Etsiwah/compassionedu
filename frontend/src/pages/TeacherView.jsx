@@ -8,11 +8,11 @@ import AttendanceRecorder from './teacher/AttendanceRecorder';
 import ResultsEntry from './teacher/ResultsEntry';
 
 const LINKS = [
-  { to: '/teacher/dashboard',  label: 'Dashboard',  icon: '🏠' },
-  { to: '/teacher/attendance', label: 'Attendance',  icon: '📅' },
-  { to: '/teacher/results',    label: 'Results',     icon: '📊' },
-  { to: '/teacher/students',   label: 'Students',    icon: '🎒' },
-  { to: '/settings',           label: 'Settings',    icon: '⚙️' },
+  { to: '/teacher/dashboard',  label: 'Dashboard',  iconName: 'LayoutDashboard' },
+  { to: '/teacher/attendance', label: 'Attendance',  iconName: 'CalendarDays' },
+  { to: '/teacher/results',    label: 'Results',     iconName: 'FileCheck' },
+  { to: '/teacher/students',   label: 'Students',    iconName: 'GraduationCap' },
+  { to: '/settings',           label: 'Settings',    iconName: 'Settings' },
 ];
 
 /* ── Metric card ── */

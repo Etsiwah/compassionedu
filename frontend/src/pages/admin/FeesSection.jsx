@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import api from '../../utils/api';
+import ResponsiveTable from '../../components/common/ResponsiveTable';
 
 function fmt(d) {
   if (!d) return '—';
@@ -197,7 +198,7 @@ function AssignFeeModal({ onDone, onClose }) {
               {students.map(s => <option key={s.id} value={s.id}>{s.name} ({s.email})</option>)}
             </select>
           </div>
-          <div className="grid grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div>
               <label className="block text-xs font-medium text-white/50 mb-1.5">Level *</label>
               <select value={form.academic_level} onChange={e => { set('academic_level', e.target.value); set('year_label',''); set('period_label',''); }} required className={inputCls} style={inputStyle}>
@@ -222,7 +223,7 @@ function AssignFeeModal({ onDone, onClose }) {
               </select>
             </div>
           </div>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             {[
               ['tuition_fee','Tuition Fee'], ['registration_fee','Registration Fee'],
               ['hostel_fee','Hostel Fee'], ['examination_fee','Examination Fee'],
@@ -375,62 +376,114 @@ export default function AdminFeesSection() {
               <p className="text-white/30 text-sm">No payment submissions found.</p>
             </div>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
-                    {['Student','Level / Period','Amount','Method','Date','Status','Actions'].map(h => (
-                      <th key={h} className="text-left px-4 py-3.5 text-xs font-semibold text-white/35 uppercase tracking-wide whitespace-nowrap">{h}</th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {payments.map((p, i) => (
-                    <tr key={p.id} className="hover:bg-white/3 transition-colors"
-                      style={{ borderBottom: i < payments.length - 1 ? '1px solid rgba(255,255,255,0.04)' : 'none' }}>
-                      <td className="px-4 py-4">
-                        <p className="font-semibold text-white/90">{p.student_name}</p>
-                        <p className="text-xs text-white/40">{p.student_email}</p>
-                      </td>
-                      <td className="px-4 py-4">
-                        <p className="text-white/70 text-xs">{p.academic_level}</p>
-                        <p className="text-white/40 text-xs">{p.year_label} · {p.period_label}</p>
-                      </td>
-                      <td className="px-4 py-4 text-orange-300 font-bold text-sm">{currency(p.amount_paid)}</td>
-                      <td className="px-4 py-4 text-white/60 text-xs">{p.payment_method}</td>
-                      <td className="px-4 py-4 text-white/40 text-xs whitespace-nowrap">{fmt(p.payment_date)}</td>
-                      <td className="px-4 py-4"><StatusBadge status={p.status} /></td>
-                      <td className="px-4 py-4">
-                        <div className="flex gap-1.5">
-                          <a href={fileUrl(p.file_url)} target="_blank" rel="noreferrer"
-                            className="px-2.5 py-1.5 rounded-lg text-xs font-semibold text-blue-300 hover:bg-blue-500/15 transition-all"
-                            style={{ border: '1px solid rgba(59,130,246,0.25)' }}>
-                            👁
-                          </a>
-                          <button
-                            type="button"
-                            onClick={() => downloadFile(p.file_url, p.file_name)}
-                            className="px-2.5 py-1.5 rounded-lg text-xs font-semibold text-green-300 hover:bg-green-500/15 transition-all"
-                            style={{ border: '1px solid rgba(34,197,94,0.25)' }}
-                          >
-                            Download
-                          </button>
-                          <button onClick={() => setReviewing(p)}
-                            className={`px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-all ${
-                              p.status === 'pending'
-                                ? 'text-orange-300 hover:bg-orange-500/15'
-                                : 'text-white/40 hover:text-white/70'
-                            }`}
-                            style={{ border: `1px solid ${p.status === 'pending' ? 'rgba(249,115,22,0.25)' : 'rgba(255,255,255,0.1)'}` }}>
-                            {p.status === 'pending' ? 'Review' : 'Edit'}
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+            <ResponsiveTable
+              headers={['Student','Level / Period','Amount','Method','Date','Status','Actions']}
+              data={payments}
+              emptyMessage="No payment submissions found."
+              renderRow={(p, i) => (
+                <>
+                  <td className="px-4 py-4">
+                    <p className="font-semibold text-white/90">{p.student_name}</p>
+                    <p className="text-xs text-white/40">{p.student_email}</p>
+                  </td>
+                  <td className="px-4 py-4">
+                    <p className="text-white/70 text-xs">{p.academic_level}</p>
+                    <p className="text-white/40 text-xs">{p.year_label} · {p.period_label}</p>
+                  </td>
+                  <td className="px-4 py-4 text-orange-300 font-bold text-sm">{currency(p.amount_paid)}</td>
+                  <td className="px-4 py-4 text-white/60 text-xs">{p.payment_method}</td>
+                  <td className="px-4 py-4 text-white/40 text-xs whitespace-nowrap">{fmt(p.payment_date)}</td>
+                  <td className="px-4 py-4"><StatusBadge status={p.status} /></td>
+                  <td className="px-4 py-4">
+                    <div className="flex gap-1.5">
+                      <a href={fileUrl(p.file_url)} target="_blank" rel="noreferrer"
+                        className="px-2.5 py-1.5 rounded-lg text-xs font-semibold text-blue-300 hover:bg-blue-500/15 transition-all"
+                        style={{ border: '1px solid rgba(59,130,246,0.25)' }}>
+                        👁
+                      </a>
+                      <button
+                        type="button"
+                        onClick={() => downloadFile(p.file_url, p.file_name)}
+                        className="px-2.5 py-1.5 rounded-lg text-xs font-semibold text-green-300 hover:bg-green-500/15 transition-all"
+                        style={{ border: '1px solid rgba(34,197,94,0.25)' }}
+                      >
+                        Download
+                      </button>
+                      <button onClick={() => setReviewing(p)}
+                        className={`px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                          p.status === 'pending'
+                            ? 'text-orange-300 hover:bg-orange-500/15'
+                            : 'text-white/40 hover:text-white/70'
+                        }`}
+                        style={{ border: `1px solid ${p.status === 'pending' ? 'rgba(249,115,22,0.25)' : 'rgba(255,255,255,0.1)'}` }}>
+                        {p.status === 'pending' ? 'Review' : 'Edit'}
+                      </button>
+                    </div>
+                  </td>
+                </>
+              )}
+              renderMobileCard={(p) => (
+                <div className="space-y-3">
+                  {/* Student Info */}
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="flex-1 min-w-0">
+                      <p className="font-semibold text-white/90 text-sm">{p.student_name}</p>
+                      <p className="text-xs text-white/50 mt-0.5 truncate">{p.student_email}</p>
+                      <div className="mt-2">
+                        <StatusBadge status={p.status} />
+                      </div>
+                    </div>
+                    <p className="text-orange-300 font-bold text-lg">{currency(p.amount_paid)}</p>
+                  </div>
+
+                  {/* Details Grid */}
+                  <div className="grid grid-cols-2 gap-3 text-xs">
+                    <div>
+                      <p className="text-white/40 mb-1">Level</p>
+                      <p className="text-white/70">{p.academic_level}</p>
+                    </div>
+                    <div>
+                      <p className="text-white/40 mb-1">Period</p>
+                      <p className="text-white/70">{p.year_label} · {p.period_label}</p>
+                    </div>
+                    <div>
+                      <p className="text-white/40 mb-1">Method</p>
+                      <p className="text-white/70">{p.payment_method}</p>
+                    </div>
+                    <div>
+                      <p className="text-white/40 mb-1">Date</p>
+                      <p className="text-white/70">{fmt(p.payment_date)}</p>
+                    </div>
+                  </div>
+
+                  {/* Actions */}
+                  <div className="flex gap-2 pt-2 border-t border-white/5 flex-wrap">
+                    <a href={fileUrl(p.file_url)} target="_blank" rel="noreferrer"
+                      className="flex-1 min-w-[80px] text-center px-3 py-2.5 rounded-lg text-xs font-semibold text-blue-300 hover:bg-blue-500/15 transition-all"
+                      style={{ border: '1px solid rgba(59,130,246,0.25)' }}>
+                      👁 View
+                    </a>
+                    <button
+                      type="button"
+                      onClick={() => downloadFile(p.file_url, p.file_name)}
+                      className="flex-1 min-w-[80px] px-3 py-2.5 rounded-lg text-xs font-semibold text-green-300 hover:bg-green-500/15 transition-all"
+                      style={{ border: '1px solid rgba(34,197,94,0.25)' }}
+                    >
+                      📥 Download
+                    </button>
+                    <button onClick={() => setReviewing(p)}
+                      className={`flex-1 min-w-[80px] px-3 py-2.5 rounded-lg text-xs font-semibold transition-all ${
+                        p.status === 'pending'
+                          ? 'text-orange-300 hover:bg-orange-500/15'
+                          : 'text-white/40 hover:text-white/70'
+                      }`}
+                      style={{ border: `1px solid ${p.status === 'pending' ? 'rgba(249,115,22,0.25)' : 'rgba(255,255,255,0.1)'}` }}>
+                      {p.status === 'pending' ? '✏️ Review' : '✏️ Edit'}
+                    </button>
+                  </div>
+                </div>
+              )}
+            />
           )}
         </div>
       )}
@@ -447,39 +500,74 @@ export default function AdminFeesSection() {
               <p className="text-white/30 text-sm">No fee records found. Click "Assign Fees" to create one.</p>
             </div>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
-                    {['Student','Level / Period','Total','Paid','Outstanding','Status','Due'].map(h => (
-                      <th key={h} className="text-left px-4 py-3.5 text-xs font-semibold text-white/35 uppercase tracking-wide whitespace-nowrap">{h}</th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {records.map((r, i) => (
-                    <tr key={r.id} className="hover:bg-white/3 transition-colors"
-                      style={{ borderBottom: i < records.length - 1 ? '1px solid rgba(255,255,255,0.04)' : 'none' }}>
-                      <td className="px-4 py-4">
-                        <p className="font-semibold text-white/90">{r.student_name}</p>
-                        <p className="text-xs text-white/40">{r.student_email}</p>
-                      </td>
-                      <td className="px-4 py-4">
-                        <p className="text-white/70 text-xs">{r.academic_level}</p>
-                        <p className="text-white/40 text-xs">{r.year_label} · {r.period_label}</p>
-                      </td>
-                      <td className="px-4 py-4 text-white/80 font-medium">{currency(r.total_amount)}</td>
-                      <td className="px-4 py-4 text-green-300 font-medium">{currency(r.amount_paid)}</td>
-                      <td className="px-4 py-4 text-red-300 font-medium">
+            <ResponsiveTable
+              headers={['Student','Level / Period','Total','Paid','Outstanding','Status','Due']}
+              data={records}
+              emptyMessage="No fee records found."
+              renderRow={(r, i) => (
+                <>
+                  <td className="px-4 py-4">
+                    <p className="font-semibold text-white/90">{r.student_name}</p>
+                    <p className="text-xs text-white/40">{r.student_email}</p>
+                  </td>
+                  <td className="px-4 py-4">
+                    <p className="text-white/70 text-xs">{r.academic_level}</p>
+                    <p className="text-white/40 text-xs">{r.year_label} · {r.period_label}</p>
+                  </td>
+                  <td className="px-4 py-4 text-white/80 font-medium">{currency(r.total_amount)}</td>
+                  <td className="px-4 py-4 text-green-300 font-medium">{currency(r.amount_paid)}</td>
+                  <td className="px-4 py-4 text-red-300 font-medium">
+                    {currency(Math.max(0, Number(r.total_amount) - Number(r.amount_paid)))}
+                  </td>
+                  <td className="px-4 py-4"><StatusBadge status={r.status} /></td>
+                  <td className="px-4 py-4 text-white/40 text-xs whitespace-nowrap">{fmt(r.due_date)}</td>
+                </>
+              )}
+              renderMobileCard={(r) => (
+                <div className="space-y-3">
+                  {/* Student Info */}
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="flex-1 min-w-0">
+                      <p className="font-semibold text-white/90 text-sm">{r.student_name}</p>
+                      <p className="text-xs text-white/50 mt-0.5 truncate">{r.student_email}</p>
+                      <div className="mt-2">
+                        <StatusBadge status={r.status} />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Details Grid */}
+                  <div className="grid grid-cols-2 gap-3 text-xs">
+                    <div>
+                      <p className="text-white/40 mb-1">Level</p>
+                      <p className="text-white/70">{r.academic_level}</p>
+                    </div>
+                    <div>
+                      <p className="text-white/40 mb-1">Period</p>
+                      <p className="text-white/70">{r.year_label} · {r.period_label}</p>
+                    </div>
+                    <div>
+                      <p className="text-white/40 mb-1">Total</p>
+                      <p className="text-white/80 font-medium">{currency(r.total_amount)}</p>
+                    </div>
+                    <div>
+                      <p className="text-white/40 mb-1">Paid</p>
+                      <p className="text-green-300 font-medium">{currency(r.amount_paid)}</p>
+                    </div>
+                    <div>
+                      <p className="text-white/40 mb-1">Outstanding</p>
+                      <p className="text-red-300 font-medium">
                         {currency(Math.max(0, Number(r.total_amount) - Number(r.amount_paid)))}
-                      </td>
-                      <td className="px-4 py-4"><StatusBadge status={r.status} /></td>
-                      <td className="px-4 py-4 text-white/40 text-xs whitespace-nowrap">{fmt(r.due_date)}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-white/40 mb-1">Due Date</p>
+                      <p className="text-white/70">{fmt(r.due_date)}</p>
+                    </div>
+                  </div>
+                </div>
+              )}
+            />
           )}
         </div>
       )}

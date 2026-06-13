@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import api from '../../utils/api';
+import ResponsiveTable from '../../components/common/ResponsiveTable';
 
 const ACTION_ICONS = {
   login:              '🔑',
@@ -156,44 +157,67 @@ export default function ActivityLogsSection() {
             <p className="text-white/30 text-sm">No activity logs yet.</p>
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
-                  {['Time', 'User', 'Role', 'Action', 'Entity', 'IP'].map(h => (
-                    <th key={h} className="text-left px-4 py-3 text-xs font-semibold text-white/35 uppercase tracking-wide whitespace-nowrap">
-                      {h}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {logs.map((log, i) => (
-                  <tr key={log.id}
-                    className="hover:bg-white/3 transition-colors"
-                    style={{ borderBottom: i < logs.length - 1 ? '1px solid rgba(255,255,255,0.04)' : 'none' }}>
-                    <td className="px-4 py-3 text-white/40 text-xs whitespace-nowrap">{fmt(log.created_at)}</td>
-                    <td className="px-4 py-3 text-white/70 font-medium">{log.user_name || '—'}</td>
-                    <td className="px-4 py-3">
-                      {log.user_role ? (
-                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full capitalize ${ROLE_COLOURS[log.user_role] || 'text-white/40 bg-white/5'}`}>
-                          {log.user_role}
-                        </span>
-                      ) : '—'}
-                    </td>
-                    <td className="px-4 py-3">
-                      <span className="flex items-center gap-1.5 text-white/70">
-                        <span>{ACTION_ICONS[log.action] || '📌'}</span>
-                        <span className="text-xs">{log.action?.replace(/_/g, ' ')}</span>
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 text-white/40 text-xs">{log.entity_type || '—'}</td>
-                    <td className="px-4 py-3 text-white/30 text-xs font-mono">{log.ip_address || '—'}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <ResponsiveTable
+            headers={['Time', 'User', 'Role', 'Action', 'Entity', 'IP']}
+            data={logs}
+            emptyMessage="No activity logs yet."
+            renderRow={(log, i) => (
+              <>
+                <td className="px-4 py-3 text-white/40 text-xs whitespace-nowrap">{fmt(log.created_at)}</td>
+                <td className="px-4 py-3 text-white/70 font-medium">{log.user_name || '—'}</td>
+                <td className="px-4 py-3">
+                  {log.user_role ? (
+                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full capitalize ${ROLE_COLOURS[log.user_role] || 'text-white/40 bg-white/5'}`}>
+                      {log.user_role}
+                    </span>
+                  ) : '—'}
+                </td>
+                <td className="px-4 py-3">
+                  <span className="flex items-center gap-1.5 text-white/70">
+                    <span>{ACTION_ICONS[log.action] || '📌'}</span>
+                    <span className="text-xs">{log.action?.replace(/_/g, ' ')}</span>
+                  </span>
+                </td>
+                <td className="px-4 py-3 text-white/40 text-xs">{log.entity_type || '—'}</td>
+                <td className="px-4 py-3 text-white/30 text-xs font-mono">{log.ip_address || '—'}</td>
+              </>
+            )}
+            renderMobileCard={(log) => (
+              <div className="space-y-3">
+                {/* User and Action */}
+                <div className="flex items-start justify-between gap-2">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="text-lg">{ACTION_ICONS[log.action] || '📌'}</span>
+                      <p className="font-semibold text-white/90 text-sm">{log.action?.replace(/_/g, ' ')}</p>
+                    </div>
+                    <p className="text-xs text-white/50">{log.user_name || '—'}</p>
+                  </div>
+                  {log.user_role && (
+                    <span className={`text-[10px] font-bold px-2 py-1 rounded-full capitalize ${ROLE_COLOURS[log.user_role] || 'text-white/40 bg-white/5'}`}>
+                      {log.user_role}
+                    </span>
+                  )}
+                </div>
+
+                {/* Details Grid */}
+                <div className="grid grid-cols-2 gap-3 text-xs">
+                  <div>
+                    <p className="text-white/40 mb-1">Time</p>
+                    <p className="text-white/70">{fmt(log.created_at)}</p>
+                  </div>
+                  <div>
+                    <p className="text-white/40 mb-1">Entity</p>
+                    <p className="text-white/70">{log.entity_type || '—'}</p>
+                  </div>
+                  <div className="col-span-2">
+                    <p className="text-white/40 mb-1">IP Address</p>
+                    <p className="text-white/70 font-mono text-[10px]">{log.ip_address || '—'}</p>
+                  </div>
+                </div>
+              </div>
+            )}
+          />
         )}
       </div>
     </div>

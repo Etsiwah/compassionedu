@@ -191,7 +191,7 @@ export default function StudentPortfolioModal({ student, onClose }) {
                   {levelData.projects?.length > 0 && (
                     <div>
                       <p className="text-xs font-bold text-white/40 uppercase tracking-wide mb-2">🗂️ Projects</p>
-                      <div className="grid grid-cols-2 gap-3">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         {levelData.projects.map(p => (
                           <div key={p.id} className="rounded-xl overflow-hidden"
                             style={{ background:'rgba(255,255,255,0.04)', border:'1px solid rgba(255,255,255,0.07)' }}>

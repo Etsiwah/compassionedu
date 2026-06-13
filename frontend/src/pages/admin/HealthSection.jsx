@@ -182,7 +182,7 @@ export default function AdminHealthSection() {
             </div>
             
             <div className="p-6 bg-slate-800/50">
-              <div className="grid grid-cols-2 gap-4 text-sm mb-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm mb-4">
                 <div>
                   <span className="block text-gray-500 mb-1">Student</span>
                   <span className="font-medium text-white">{selectedRecord.student_name}</span>

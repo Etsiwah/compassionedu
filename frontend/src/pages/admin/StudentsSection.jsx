@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import api from '../../utils/api';
 import StudentPortfolioModal from './StudentPortfolioModal';
+import ResponsiveTable from '../../components/common/ResponsiveTable';
 
 function fmt(dateStr) {
   if (!dateStr) return '—';
@@ -162,7 +163,7 @@ function StudentProfileModal({ student, onClose, onEdit }) {
                 <div className="px-4 py-2.5" style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
                   <p className="text-xs font-bold text-white/50 uppercase tracking-wide">{sec.title}</p>
                 </div>
-                <div className="p-4 grid grid-cols-2 gap-3">
+                <div className="p-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
                   {sec.fields.map(([label, value]) => (
                     <div key={label}>
                       <p className="text-[10px] text-white/35 uppercase tracking-wide">{label}</p>
@@ -213,23 +214,23 @@ export default function StudentsSection() {
       </div>
 
       {/* Search + filter */}
-      <div className="rounded-2xl p-4 flex flex-wrap gap-3 items-center"
+      <div className="rounded-2xl p-4 flex flex-col sm:flex-row gap-3 items-stretch sm:items-center"
         style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.09)' }}>
-        <div className="flex-1 min-w-[220px] relative">
+        <div className="flex-1 min-w-0 relative">
           <span className="absolute left-3 top-1/2 -translate-y-1/2 text-white/30 text-sm">🔍</span>
           <input type="text" value={search} onChange={e => setSearch(e.target.value)}
-            placeholder="Search by name, email, student ID, project #, parent phone…"
+            placeholder="Search by name, email, student ID…"
             className="w-full pl-8 pr-3 py-2.5 rounded-xl text-sm text-white/90 focus:outline-none focus:ring-2 focus:ring-orange-400/60"
             style={{ background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.1)' }} />
         </div>
-        <div className="flex gap-1.5">
+        <div className="flex flex-wrap gap-2">
           {[
             { val: 'all',      label: '🌐 All' },
             { val: 'active',   label: '✅ Active' },
             { val: 'inactive', label: '⛔ Inactive' },
           ].map(f => (
             <button key={f.val} onClick={() => setStatusFilter(f.val)}
-              className={`px-3 py-2 rounded-xl text-xs font-semibold transition-all ${
+              className={`flex-1 sm:flex-none px-3 py-2 rounded-xl text-xs font-semibold transition-all ${
                 statusFilter === f.val
                   ? 'bg-orange-500/20 text-orange-300 border border-orange-500/40'
                   : 'text-white/40 border border-white/10 hover:border-white/20'
@@ -238,7 +239,7 @@ export default function StudentsSection() {
             </button>
           ))}
         </div>
-        <span className="text-xs text-white/30">{students.length} result{students.length !== 1 ? 's' : ''}</span>
+        <span className="text-xs text-white/30 text-center sm:text-left">{students.length} result{students.length !== 1 ? 's' : ''}</span>
       </div>
 
       {error && (
@@ -249,93 +250,143 @@ export default function StudentsSection() {
       )}
 
       {/* Table */}
-      <div className="rounded-2xl overflow-hidden"
-        style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)' }}>
+      <div>
         {loading ? (
-          <div className="py-12 text-center text-white/30 text-sm">Loading students…</div>
-        ) : students.length === 0 ? (
-          <div className="py-12 text-center">
-            <div className="text-3xl mb-2">🎒</div>
-            <p className="text-white/30 text-sm">
-              {search ? 'No students match your search.' : 'No students registered yet.'}
-            </p>
+          <div className="py-12 text-center text-white/30 text-sm rounded-2xl" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)' }}>
+            Loading students…
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
-                  {['Student', 'Contact', 'School / Level', 'Project #', 'Status', 'Registered', 'Actions'].map(h => (
-                    <th key={h} className="text-left px-4 py-3.5 text-xs font-semibold text-white/35 uppercase tracking-wide whitespace-nowrap">
-                      {h}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {students.map((s, i) => (
-                  <tr key={s.id}
-                    className="hover:bg-white/3 transition-colors cursor-pointer"
-                    style={{ borderBottom: i < students.length - 1 ? '1px solid rgba(255,255,255,0.04)' : 'none' }}
-                    onClick={() => setSelected(s)}>
-                    {/* Name + avatar */}
-                    <td className="px-4 py-4">
-                      <div className="flex items-center gap-3">
-                        <div className="w-9 h-9 rounded-full flex-shrink-0 overflow-hidden">
-                          {s.photo_url ? (
-                            <img src={s.photo_url} alt={s.name} className="w-full h-full object-cover" />
-                          ) : (
-                            <div className="w-full h-full bg-gradient-to-br from-orange-400 to-orange-600 flex items-center justify-center text-white text-xs font-bold">
-                              {initials(s.name)}
-                            </div>
-                          )}
+          <ResponsiveTable
+            headers={['Student', 'Contact', 'School / Level', 'Project #', 'Status', 'Registered', 'Actions']}
+            data={students}
+            emptyMessage={
+              search ? 'No students match your search.' : 'No students registered yet.'
+            }
+            renderRow={(s, i) => (
+              <>
+                {/* Name + avatar */}
+                <td className="px-4 py-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-9 h-9 rounded-full flex-shrink-0 overflow-hidden">
+                      {s.photo_url ? (
+                        <img src={s.photo_url} alt={s.name} className="w-full h-full object-cover" />
+                      ) : (
+                        <div className="w-full h-full bg-gradient-to-br from-orange-400 to-orange-600 flex items-center justify-center text-white text-xs font-bold">
+                          {initials(s.name)}
                         </div>
-                        <div>
-                          <p className="font-semibold text-white/90">{s.name}</p>
-                          <p className="text-xs text-white/40">{s.email}</p>
-                        </div>
+                      )}
+                    </div>
+                    <div>
+                      <p className="font-semibold text-white/90">{s.name}</p>
+                      <p className="text-xs text-white/40">{s.email}</p>
+                    </div>
+                  </div>
+                </td>
+                {/* Contact */}
+                <td className="px-4 py-4">
+                  <p className="text-white/60 text-xs">{s.phone || '—'}</p>
+                  <p className="text-white/35 text-xs mt-0.5">Parent: {s.parent_phone || '—'}</p>
+                </td>
+                {/* School */}
+                <td className="px-4 py-4">
+                  <p className="text-white/70 text-xs">{s.school_name || '—'}</p>
+                  <p className="text-white/35 text-xs mt-0.5">{s.level || '—'} · {s.program || '—'}</p>
+                </td>
+                {/* Project # */}
+                <td className="px-4 py-4 text-white/60 text-xs">{s.project_numbers || '—'}</td>
+                {/* Status */}
+                <td className="px-4 py-4">
+                  <span className={`text-xs px-2 py-0.5 rounded-full font-semibold ${s.is_active ? 'text-green-400 bg-green-400/10' : 'text-red-400 bg-red-400/10'}`}>
+                    {s.is_active ? 'Active' : 'Inactive'}
+                  </span>
+                </td>
+                {/* Date */}
+                <td className="px-4 py-4 text-white/40 text-xs whitespace-nowrap">{fmt(s.created_at)}</td>
+                {/* Actions */}
+                <td className="px-4 py-4">
+                  <div className="flex gap-1.5">
+                    <button onClick={() => setSelected(s)}
+                      className="px-3 py-1.5 rounded-lg text-xs font-semibold text-blue-300 hover:bg-blue-500/15 transition-all"
+                      style={{ border: '1px solid rgba(59,130,246,0.25)' }}>
+                      👁 Profile
+                    </button>
+                    <button onClick={() => setViewPortfolio(s)}
+                      className="px-3 py-1.5 rounded-lg text-xs font-semibold text-purple-300 hover:bg-purple-500/15 transition-all"
+                      style={{ border: '1px solid rgba(168,85,247,0.25)' }}>
+                      🗂️ Portfolio
+                    </button>
+                  </div>
+                </td>
+              </>
+            )}
+            renderMobileCard={(s) => (
+              <div className="space-y-3">
+                {/* Student Info */}
+                <div className="flex items-start gap-3">
+                  <div className="w-12 h-12 rounded-full flex-shrink-0 overflow-hidden">
+                    {s.photo_url ? (
+                      <img src={s.photo_url} alt={s.name} className="w-full h-full object-cover" />
+                    ) : (
+                      <div className="w-full h-full bg-gradient-to-br from-orange-400 to-orange-600 flex items-center justify-center text-white text-sm font-bold">
+                        {initials(s.name)}
                       </div>
-                    </td>
-                    {/* Contact */}
-                    <td className="px-4 py-4">
-                      <p className="text-white/60 text-xs">{s.phone || '—'}</p>
-                      <p className="text-white/35 text-xs mt-0.5">Parent: {s.parent_phone || '—'}</p>
-                    </td>
-                    {/* School */}
-                    <td className="px-4 py-4">
-                      <p className="text-white/70 text-xs">{s.school_name || '—'}</p>
-                      <p className="text-white/35 text-xs mt-0.5">{s.level || '—'} · {s.program || '—'}</p>
-                    </td>
-                    {/* Project # */}
-                    <td className="px-4 py-4 text-white/60 text-xs">{s.project_numbers || '—'}</td>
-                    {/* Status */}
-                    <td className="px-4 py-4">
-                      <span className={`text-xs px-2 py-0.5 rounded-full font-semibold ${s.is_active ? 'text-green-400 bg-green-400/10' : 'text-red-400 bg-red-400/10'}`}>
+                    )}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-semibold text-white/90 text-sm">{s.name}</p>
+                    <p className="text-xs text-white/50 mt-0.5 truncate">{s.email}</p>
+                    <div className="mt-2">
+                      <span className={`text-xs px-2 py-1 rounded-full font-semibold ${s.is_active ? 'text-green-400 bg-green-400/10' : 'text-red-400 bg-red-400/10'}`}>
                         {s.is_active ? 'Active' : 'Inactive'}
                       </span>
-                    </td>
-                    {/* Date */}
-                    <td className="px-4 py-4 text-white/40 text-xs whitespace-nowrap">{fmt(s.created_at)}</td>
-                    {/* Actions */}
-                    <td className="px-4 py-4" onClick={e => e.stopPropagation()}>
-                      <div className="flex gap-1.5">
-                        <button onClick={() => setSelected(s)}
-                          className="px-3 py-1.5 rounded-lg text-xs font-semibold text-blue-300 hover:bg-blue-500/15 transition-all"
-                          style={{ border: '1px solid rgba(59,130,246,0.25)' }}>
-                          👁 Profile
-                        </button>
-                        <button onClick={() => setViewPortfolio(s)}
-                          className="px-3 py-1.5 rounded-lg text-xs font-semibold text-purple-300 hover:bg-purple-500/15 transition-all"
-                          style={{ border: '1px solid rgba(168,85,247,0.25)' }}>
-                          🗂️ Portfolio
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Details Grid */}
+                <div className="grid grid-cols-2 gap-3 text-xs">
+                  <div>
+                    <p className="text-white/40 mb-1">Phone</p>
+                    <p className="text-white/70">{s.phone || '—'}</p>
+                  </div>
+                  <div>
+                    <p className="text-white/40 mb-1">Parent Phone</p>
+                    <p className="text-white/70">{s.parent_phone || '—'}</p>
+                  </div>
+                  <div>
+                    <p className="text-white/40 mb-1">School</p>
+                    <p className="text-white/70">{s.school_name || '—'}</p>
+                  </div>
+                  <div>
+                    <p className="text-white/40 mb-1">Level</p>
+                    <p className="text-white/70">{s.level || '—'}</p>
+                  </div>
+                  <div>
+                    <p className="text-white/40 mb-1">Project #</p>
+                    <p className="text-white/70">{s.project_numbers || '—'}</p>
+                  </div>
+                  <div>
+                    <p className="text-white/40 mb-1">Registered</p>
+                    <p className="text-white/70">{fmt(s.created_at)}</p>
+                  </div>
+                </div>
+
+                {/* Actions */}
+                <div className="flex gap-2 pt-2 border-t border-white/5">
+                  <button onClick={() => setSelected(s)}
+                    className="flex-1 px-3 py-2.5 rounded-lg text-xs font-semibold text-blue-300 hover:bg-blue-500/15 transition-all"
+                    style={{ border: '1px solid rgba(59,130,246,0.25)' }}>
+                    👁 View Profile
+                  </button>
+                  <button onClick={() => setViewPortfolio(s)}
+                    className="flex-1 px-3 py-2.5 rounded-lg text-xs font-semibold text-purple-300 hover:bg-purple-500/15 transition-all"
+                    style={{ border: '1px solid rgba(168,85,247,0.25)' }}>
+                    🗂️ Portfolio
+                  </button>
+                </div>
+              </div>
+            )}
+          />
         )}
       </div>
 

@@ -31,6 +31,76 @@ function PasswordEyeIcon({ visible }) {
   );
 }
 
+function PasswordStrength({ password }) {
+  const requirements = [
+    { label: 'At least 8 characters', met: password.length >= 8 },
+    { label: 'One uppercase letter', met: /[A-Z]/.test(password) },
+    { label: 'One lowercase letter', met: /[a-z]/.test(password) },
+    { label: 'One number', met: /[0-9]/.test(password) },
+    { label: 'One special character', met: /[!@#$%^&*(),.?":{}|<>]/.test(password) },
+  ];
+
+  const metCount = requirements.filter(r => r.met).length;
+  const strength = metCount === 0 ? 'none' : metCount <= 2 ? 'weak' : metCount <= 4 ? 'medium' : 'strong';
+  
+  const strengthColors = {
+    none: 'rgba(156, 163, 175, 0.3)',
+    weak: '#ef4444',
+    medium: '#f59e0b',
+    strong: '#10b981',
+  };
+
+  if (!password) return null;
+
+  return (
+    <div className="mt-2 space-y-2">
+      {/* Strength bars */}
+      <div className="flex gap-1">
+        {[1, 2, 3, 4, 5].map((bar) => (
+          <div
+            key={bar}
+            className="h-1 flex-1 rounded-full transition-all duration-300"
+            style={{
+              background: bar <= metCount ? strengthColors[strength] : 'rgba(255,255,255,0.15)',
+            }}
+          />
+        ))}
+      </div>
+
+      {/* Strength label */}
+      {strength !== 'none' && (
+        <p className="text-xs font-medium" style={{ color: strengthColors[strength] }}>
+          {strength === 'weak' && 'Weak password'}
+          {strength === 'medium' && 'Medium password'}
+          {strength === 'strong' && 'Strong password'}
+        </p>
+      )}
+
+      {/* Requirements checklist */}
+      <div className="space-y-1">
+        {requirements.map((req, idx) => (
+          <div key={idx} className="flex items-center gap-2 text-xs">
+            <div className="flex-shrink-0">
+              {req.met ? (
+                <svg className="w-4 h-4" viewBox="0 0 20 20" fill="#10b981">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                </svg>
+              ) : (
+                <svg className="w-4 h-4" viewBox="0 0 20 20" fill="rgba(156, 163, 175, 0.5)">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                </svg>
+              )}
+            </div>
+            <span style={{ color: req.met ? 'rgba(255,255,255,0.9)' : 'rgba(255,255,255,0.5)' }}>
+              {req.label}
+            </span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export default function LoginPage() {
   const { login } = useAuth();
   const navigate = useNavigate();
@@ -54,6 +124,8 @@ export default function LoginPage() {
   const [suError,      setSuError]      = useState('');
   const [suLoading,    setSuLoading]    = useState(false);
   const [suSuccess,    setSuSuccess]    = useState('');
+  const [showSuPassword, setShowSuPassword] = useState(false);
+  const [showSuConfirm, setShowSuConfirm] = useState(false);
 
   async function doLogin(email, password) {
     setSiError('');
@@ -446,48 +518,89 @@ export default function LoginPage() {
                   <label htmlFor="su-role" className="block text-sm font-medium mb-1" style={{ color: 'rgba(255,255,255,0.8)' }}>
                     I am a…
                   </label>
-                  <select
-                    id="su-role"
-                    value={suRole}
-                    onChange={e => setSuRole(e.target.value)}
-                    className="w-full rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
-                    style={{ background: 'rgba(255,255,255,0.12)', border: '1px solid rgba(255,255,255,0.2)', color: '#fff' }}
-                  >
-                    <option value="student">Student 🎒</option>
-                    <option value="staff">Staff 🏫</option>
-                  </select>
+                  <div className="relative">
+                    <select
+                      id="su-role"
+                      value={suRole}
+                      onChange={e => setSuRole(e.target.value)}
+                      className="w-full rounded-lg pl-10 pr-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400 appearance-none cursor-pointer"
+                      style={{ background: 'rgba(255,255,255,0.12)', border: '1px solid rgba(255,255,255,0.2)', color: '#fff' }}
+                    >
+                      <option value="student">Student</option>
+                      <option value="staff">Staff</option>
+                    </select>
+                    <div className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none">
+                      <img 
+                        src={suRole === 'student' ? '/images/student.jpg' : '/images/staff.jpg'} 
+                        alt={suRole} 
+                        className="w-5 h-5 object-cover rounded-full"
+                      />
+                    </div>
+                    <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
+                      <svg className="w-4 h-4" fill="rgba(255,255,255,0.6)" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+                      </svg>
+                    </div>
+                  </div>
                 </div>
                 <div>
                   <label htmlFor="su-password" className="block text-sm font-medium mb-1" style={{ color: 'rgba(255,255,255,0.8)' }}>
                     Password
                   </label>
-                  <input
-                    id="su-password"
-                    type="password"
-                    required
-                    autoComplete="new-password"
-                    value={suPassword}
-                    onChange={e => setSuPassword(e.target.value)}
-                    placeholder="Min. 6 characters"
-                    className="w-full rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
-                    style={{ background: 'rgba(255,255,255,0.12)', border: '1px solid rgba(255,255,255,0.2)', color: '#fff' }}
-                  />
+                  <div className="relative">
+                    <input
+                      id="su-password"
+                      type={showSuPassword ? 'text' : 'password'}
+                      required
+                      autoComplete="new-password"
+                      value={suPassword}
+                      onChange={e => setSuPassword(e.target.value)}
+                      placeholder="Min. 8 characters"
+                      className="w-full rounded-lg pl-3 pr-10 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
+                      style={{ background: 'rgba(255,255,255,0.12)', border: '1px solid rgba(255,255,255,0.2)', color: '#fff' }}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowSuPassword(!showSuPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 rounded-md p-1 text-white/60 transition hover:bg-white/10 hover:text-white focus:outline-none focus:ring-2 focus:ring-orange-400"
+                      aria-label={showSuPassword ? "Hide password" : "Show password"}
+                      aria-pressed={showSuPassword}
+                      title={showSuPassword ? "Hide password" : "Show password"}
+                      tabIndex="-1"
+                    >
+                      <PasswordEyeIcon visible={showSuPassword} />
+                    </button>
+                  </div>
+                  <PasswordStrength password={suPassword} />
                 </div>
                 <div>
                   <label htmlFor="su-confirm" className="block text-sm font-medium mb-1" style={{ color: 'rgba(255,255,255,0.8)' }}>
                     Confirm Password
                   </label>
-                  <input
-                    id="su-confirm"
-                    type="password"
-                    required
-                    autoComplete="new-password"
-                    value={suConfirm}
-                    onChange={e => setSuConfirm(e.target.value)}
-                    placeholder="••••••••"
-                    className="w-full rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
-                    style={{ background: 'rgba(255,255,255,0.12)', border: '1px solid rgba(255,255,255,0.2)', color: '#fff' }}
-                  />
+                  <div className="relative">
+                    <input
+                      id="su-confirm"
+                      type={showSuConfirm ? 'text' : 'password'}
+                      required
+                      autoComplete="new-password"
+                      value={suConfirm}
+                      onChange={e => setSuConfirm(e.target.value)}
+                      placeholder="••••••••"
+                      className="w-full rounded-lg pl-3 pr-10 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
+                      style={{ background: 'rgba(255,255,255,0.12)', border: '1px solid rgba(255,255,255,0.2)', color: '#fff' }}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowSuConfirm(!showSuConfirm)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 rounded-md p-1 text-white/60 transition hover:bg-white/10 hover:text-white focus:outline-none focus:ring-2 focus:ring-orange-400"
+                      aria-label={showSuConfirm ? "Hide password" : "Show password"}
+                      aria-pressed={showSuConfirm}
+                      title={showSuConfirm ? "Hide password" : "Show password"}
+                      tabIndex="-1"
+                    >
+                      <PasswordEyeIcon visible={showSuConfirm} />
+                    </button>
+                  </div>
                 </div>
                 {suError && (
                   <p role="alert" className="text-sm text-red-500 bg-red-50 dark:bg-red-900/20 rounded-lg px-3 py-2">

@@ -278,7 +278,51 @@ async function migrate() {
     }
     console.log('  ✅  Beneficiary/student management tables ensured');
 
-    // ── STEP 5: Ensure activity_logs table exists ──────────────────────────────
+    // ── STEP 5.5: Run announcement module improvements migration ──────────────
+    const announcementMigrationPath = path.join(__dirname, 'migrations', 'update_announcements_schema.sql');
+    if (fs.existsSync(announcementMigrationPath)) {
+      const migrationSql = fs.readFileSync(announcementMigrationPath, 'utf8');
+      
+      // Remove comment-only lines but keep SQL statements
+      const cleanedSql = migrationSql
+        .split('\n')
+        .filter(line => {
+          const trimmed = line.trim();
+          return trimmed.length > 0 && !trimmed.startsWith('--');
+        })
+        .join('\n');
+      
+      const migrationStatements = cleanedSql
+        .split(';')
+        .map(s => s.trim())
+        .filter(s => s.length > 0);
+
+      let migOk = 0;
+      let migSkipped = 0;
+
+      for (const stmt of migrationStatements) {
+        try {
+          await client.query(stmt);
+          migOk++;
+        } catch (err) {
+          if (
+            err.code === '42710' || // duplicate_object
+            err.code === '42P07' || // duplicate_table
+            err.code === '42701' || // duplicate_column
+            err.message.includes('already exists')
+          ) {
+            migSkipped++;
+          } else {
+            console.warn(`  ⚠️  Migration statement skipped: ${err.message.slice(0, 80)}`);
+            migSkipped++;
+          }
+        }
+      }
+
+      console.log(`  ✅  Announcement module migration applied (${migOk} statements OK, ${migSkipped} skipped/existing)`);
+    }
+
+    // ── STEP 6: Ensure activity_logs table exists ──────────────────────────────
     await client.query(`
       CREATE TABLE IF NOT EXISTS activity_logs (
         id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -295,7 +339,7 @@ async function migrate() {
     `);
     console.log('  ✅  activity_logs table ensured');
 
-    // ── STEP 6: Ensure beneficiaries table exists ──────────────────────────────
+    // ── STEP 7: Ensure beneficiaries table exists ──────────────────────────────
     await client.query(`
       CREATE TABLE IF NOT EXISTS beneficiaries (
         id         UUID PRIMARY KEY DEFAULT gen_random_uuid(),

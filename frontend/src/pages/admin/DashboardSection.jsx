@@ -28,9 +28,9 @@ function MetricCard({ icon, label, value, sub, colour, onClick }) {
       >
         {icon}
       </div>
-      <div className="min-w-0">
+      <div className="min-w-0 flex-1">
         <p className="text-2xl font-bold text-white leading-tight">{value ?? <span className="text-white/30 text-lg">—</span>}</p>
-        <p className="text-sm font-medium text-white/70 mt-0.5">{label}</p>
+        <p className="text-xs sm:text-sm font-medium text-white/70 mt-0.5 leading-snug">{label}</p>
         {sub && <p className="text-xs text-white/35 mt-0.5">{sub}</p>}
       </div>
     </button>

@@ -5,13 +5,14 @@ import Sidebar from '../components/common/Sidebar';
 import api from '../utils/api';
 import useAuth from '../hooks/useAuth';
 import StaffProfileSection from './staff/ProfileSection';
+import StaffAnnouncementsSection from './staff/AnnouncementsSection';
 
 const LINKS = [
-  { to: '/staff/dashboard',      label: 'Dashboard',     icon: '🏠' },
-  { to: '/staff/students',       label: 'Students',      icon: '🎒' },
-  { to: '/staff/attendance',     label: 'Attendance',    icon: '📅' },
-  { to: '/staff/announcements',  label: 'Announcements', icon: '📢' },
-  { to: '/settings',             label: 'Settings',      icon: '⚙️' },
+  { to: '/staff/dashboard',      label: 'Dashboard',     iconName: 'LayoutDashboard' },
+  { to: '/staff/students',       label: 'Students',      iconName: 'GraduationCap' },
+  { to: '/staff/attendance',     label: 'Attendance',    iconName: 'CalendarDays' },
+  { to: '/staff/announcements',  label: 'Announcements', iconName: 'Megaphone' },
+  { to: '/settings',             label: 'Settings',      iconName: 'Settings' },
 ];
 
 /* ── Metric card ── */
@@ -32,9 +33,9 @@ function MetricCard({ icon, label, value, colour, onClick }) {
         style={{ background: colour || 'rgba(249,115,22,0.15)', border: '1px solid rgba(255,255,255,0.1)' }}>
         {icon}
       </div>
-      <div>
+      <div className="min-w-0 flex-1">
         <p className="text-2xl font-bold text-white">{value ?? '—'}</p>
-        <p className="text-sm font-medium text-white/70">{label}</p>
+        <p className="text-xs sm:text-sm font-medium text-white/70 leading-snug">{label}</p>
       </div>
     </button>
   );
@@ -234,47 +235,8 @@ function AttendanceSection() {
   );
 }
 
-/* ── Announcements (read-only) ── */
-function AnnouncementsSection() {
-  const [items, setItems]   = useState([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    api.get('/staff-portal/announcements')
-      .then(r => setItems(r.data || []))
-      .catch(() => {})
-      .finally(() => setLoading(false));
-  }, []);
-
-  return (
-    <div>
-      <h2 className="text-lg font-bold text-white mb-4">Announcements</h2>
-      {loading ? (
-        <p className="text-white/30 text-sm">Loading…</p>
-      ) : items.length === 0 ? (
-        <p className="text-white/30 text-sm">No announcements yet.</p>
-      ) : (
-        <div className="flex flex-col gap-3">
-          {items.map(a => (
-            <div key={a.id} className="rounded-2xl p-4"
-              style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)' }}>
-              <div className="flex items-start justify-between gap-3">
-                <h3 className="text-sm font-semibold text-white">{a.title}</h3>
-                <span className="text-[10px] text-white/30 whitespace-nowrap">
-                  {new Date(a.created_at).toLocaleDateString()}
-                </span>
-              </div>
-              <p className="text-sm text-white/60 mt-1.5 leading-relaxed">{a.content}</p>
-              {a.created_by_name && (
-                <p className="text-xs text-white/30 mt-2">— {a.created_by_name}</p>
-              )}
-            </div>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-}
+/* ── Announcements (with reply functionality) ── */
+// Imported from ./staff/AnnouncementsSection.jsx
 
 export default function StaffDashboard() {
   return (
@@ -288,7 +250,7 @@ export default function StaffDashboard() {
             <Route path="dashboard"     element={<StaffDashboardHome />} />
             <Route path="students"      element={<StudentsListSection />} />
             <Route path="attendance"    element={<AttendanceSection />} />
-            <Route path="announcements" element={<AnnouncementsSection />} />
+            <Route path="announcements" element={<StaffAnnouncementsSection />} />
             <Route path="profile"       element={<StaffProfileSection />} />
             <Route path="*"             element={<Navigate to="dashboard" replace />} />
           </Routes>

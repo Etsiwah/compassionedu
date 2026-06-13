@@ -212,9 +212,9 @@ export default function LandingPage() {
           <h3 className="text-white font-semibold mb-4 opacity-80">Tap a role to learn more</h3>
           <div className="flex flex-wrap gap-4 justify-center mb-6">
             {[
-              { role: 'Student', icon: '🎒' },
-              { role: 'Staff', icon: '📚' },
-              { role: 'Admin',   icon: '🛡️' },
+              { role: 'Student', icon: '/images/student.jpg' },
+              { role: 'Staff', icon: '/images/staff.jpg' },
+              { role: 'Admin',   icon: '/images/dashboard.jpg.png' },
             ].map(({ role, icon }) => (
               <button
                 key={role}
@@ -228,7 +228,8 @@ export default function LandingPage() {
                   outline: 'none',
                 }}
               >
-                {icon} {role}
+                <img src={icon} alt={role} className="w-5 h-5 object-cover rounded-full" />
+                {role}
               </button>
             ))}
           </div>

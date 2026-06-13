@@ -14,7 +14,7 @@ export default function Navbar() {
 
   return (
     <nav
-      className="sticky top-0 z-40 flex items-center justify-between px-4 py-2.5"
+      className="sticky top-0 z-50 flex items-center justify-between px-4 py-2.5"
       style={{
         backdropFilter: 'blur(20px)',
         WebkitBackdropFilter: 'blur(20px)',

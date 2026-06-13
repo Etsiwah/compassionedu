@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import api from '../../utils/api';
+import ResponsiveTable from '../../components/common/ResponsiveTable';
 
 /* ── helpers ── */
 function fmt(dateStr) {
@@ -296,7 +297,7 @@ function StaffProfileModal({ staffId, onClose }) {
             <p className="text-sm text-white/50 mb-6">{profile.email}</p>
 
             <div className="flex flex-col gap-4">
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <p className="text-[10px] text-white/40 uppercase tracking-wide">Position / Role</p>
                   <p className="text-sm text-white/90 font-medium">{profile.staff_role || '—'}</p>
@@ -542,119 +543,184 @@ export default function StaffSection() {
             </p>
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
-                  {['Staff Member', 'Contact', 'Role', 'Source', 'Status', 'Last Login', 'Date Joined', 'Actions'].map(h => (
-                    <th key={h} className="text-left px-4 py-3.5 text-xs font-semibold text-white/35 uppercase tracking-wide whitespace-nowrap">
-                      {h}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {staff.map((s, i) => (
-                  <tr key={s.id}
-                    className="group transition-colors hover:bg-white/3"
-                    style={{ borderBottom: i < staff.length - 1 ? '1px solid rgba(255,255,255,0.05)' : 'none' }}>
+          <ResponsiveTable
+            headers={['Staff Member', 'Contact', 'Role', 'Source', 'Status', 'Last Login', 'Date Joined', 'Actions']}
+            data={staff}
+            emptyMessage={
+              search || statusFilter !== 'all' || sourceFilter !== 'all'
+                ? 'No staff match your filters.'
+                : 'No staff yet. Click "Add New Staff" to get started.'
+            }
+            renderRow={(s, i) => (
+              <>
+                {/* Name + avatar */}
+                <td className="px-4 py-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-9 h-9 rounded-full flex-shrink-0 flex items-center justify-center text-xs font-bold text-white"
+                      style={{ background: s.account_source === 'admin_added'
+                        ? 'linear-gradient(135deg,#f97316,#ea580c)'
+                        : 'linear-gradient(135deg,#3b82f6,#2563eb)' }}>
+                      {initials(s.name)}
+                    </div>
+                    <span className="font-semibold text-white/90 whitespace-nowrap">{s.name}</span>
+                  </div>
+                </td>
 
-                    {/* Name + avatar */}
-                    <td className="px-4 py-4">
-                      <div className="flex items-center gap-3">
-                        <div className="w-9 h-9 rounded-full flex-shrink-0 flex items-center justify-center text-xs font-bold text-white"
-                          style={{ background: s.account_source === 'admin_added'
-                            ? 'linear-gradient(135deg,#f97316,#ea580c)'
-                            : 'linear-gradient(135deg,#3b82f6,#2563eb)' }}>
-                          {initials(s.name)}
-                        </div>
-                        <span className="font-semibold text-white/90 whitespace-nowrap">{s.name}</span>
-                      </div>
-                    </td>
+                {/* Email + phone */}
+                <td className="px-4 py-4">
+                  <p className="text-white/70">{s.email}</p>
+                  <p className="text-white/35 text-xs mt-0.5">{s.phone || '—'}</p>
+                </td>
 
-                    {/* Email + phone */}
-                    <td className="px-4 py-4">
-                      <p className="text-white/70">{s.email}</p>
-                      <p className="text-white/35 text-xs mt-0.5">{s.phone || '—'}</p>
-                    </td>
+                {/* Staff role */}
+                <td className="px-4 py-4">
+                  <span className="text-white/60 text-xs px-2 py-1 rounded-lg"
+                    style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.08)' }}>
+                    {s.staff_role || 'Unassigned'}
+                  </span>
+                </td>
 
-                    {/* Staff role */}
-                    <td className="px-4 py-4">
-                      <span className="text-white/60 text-xs px-2 py-1 rounded-lg"
-                        style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.08)' }}>
-                        {s.staff_role || 'Unassigned'}
-                      </span>
-                    </td>
+                {/* Source */}
+                <td className="px-4 py-4">
+                  <SourceBadge source={s.account_source || 'self_registered'} />
+                </td>
 
-                    {/* Source */}
-                    <td className="px-4 py-4">
+                {/* Status */}
+                <td className="px-4 py-4">
+                  <StatusBadge active={s.is_active} />
+                </td>
+
+                {/* Last login */}
+                <td className="px-4 py-4 text-white/40 text-xs whitespace-nowrap">
+                  {fmtTime(s.last_login_at)}
+                </td>
+
+                {/* Date joined */}
+                <td className="px-4 py-4 text-white/40 text-xs whitespace-nowrap">
+                  {fmt(s.created_at)}
+                </td>
+
+                {/* Actions */}
+                <td className="px-4 py-4">
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    {/* View Profile */}
+                    <button
+                      onClick={() => setModal({ type: 'view', data: s })}
+                      className="px-2.5 py-1.5 rounded-lg text-xs font-semibold text-purple-300 transition-all hover:bg-purple-500/15"
+                      style={{ border: '1px solid rgba(168,85,247,0.25)' }}
+                      title="View Profile">
+                      👤
+                    </button>
+
+                    {/* Edit */}
+                    <button
+                      onClick={() => setModal({ type: 'edit', data: s })}
+                      className="px-2.5 py-1.5 rounded-lg text-xs font-semibold text-blue-300 transition-all hover:bg-blue-500/15"
+                      style={{ border: '1px solid rgba(59,130,246,0.25)' }}>
+                      ✏️
+                    </button>
+
+                    {/* Suspend / Activate */}
+                    <button
+                      onClick={() => handleToggle(s)}
+                      disabled={toggling === s.id}
+                      className={`px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-all disabled:opacity-50 ${
+                        s.is_active
+                          ? 'text-yellow-300 hover:bg-yellow-500/15'
+                          : 'text-green-300 hover:bg-green-500/15'
+                      }`}
+                      style={{ border: `1px solid ${s.is_active ? 'rgba(234,179,8,0.25)' : 'rgba(34,197,94,0.25)'}` }}
+                      title={s.is_active ? 'Suspend' : 'Activate'}
+                    >
+                      {toggling === s.id ? '…' : s.is_active ? '⛔' : '✅'}
+                    </button>
+
+                    {/* Delete */}
+                    <button
+                      onClick={() => setModal({ type: 'delete', data: s })}
+                      className="px-2.5 py-1.5 rounded-lg text-xs font-semibold text-red-400 transition-all hover:bg-red-500/15"
+                      style={{ border: '1px solid rgba(239,68,68,0.25)' }}>
+                      🗑️
+                    </button>
+                  </div>
+                </td>
+              </>
+            )}
+            renderMobileCard={(s) => (
+              <div className="space-y-3">
+                {/* Staff Info */}
+                <div className="flex items-start gap-3">
+                  <div className="w-12 h-12 rounded-full flex-shrink-0 flex items-center justify-center text-sm font-bold text-white"
+                    style={{ background: s.account_source === 'admin_added'
+                      ? 'linear-gradient(135deg,#f97316,#ea580c)'
+                      : 'linear-gradient(135deg,#3b82f6,#2563eb)' }}>
+                    {initials(s.name)}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-semibold text-white/90 text-sm">{s.name}</p>
+                    <p className="text-xs text-white/50 mt-0.5 truncate">{s.email}</p>
+                    <div className="flex gap-2 mt-2 flex-wrap">
                       <SourceBadge source={s.account_source || 'self_registered'} />
-                    </td>
-
-                    {/* Status */}
-                    <td className="px-4 py-4">
                       <StatusBadge active={s.is_active} />
-                    </td>
+                    </div>
+                  </div>
+                </div>
 
-                    {/* Last login */}
-                    <td className="px-4 py-4 text-white/40 text-xs whitespace-nowrap">
-                      {fmtTime(s.last_login_at)}
-                    </td>
+                {/* Details Grid */}
+                <div className="grid grid-cols-2 gap-3 text-xs">
+                  <div>
+                    <p className="text-white/40 mb-1">Phone</p>
+                    <p className="text-white/70">{s.phone || '—'}</p>
+                  </div>
+                  <div>
+                    <p className="text-white/40 mb-1">Role</p>
+                    <p className="text-white/70">{s.staff_role || 'Unassigned'}</p>
+                  </div>
+                  <div>
+                    <p className="text-white/40 mb-1">Last Login</p>
+                    <p className="text-white/70">{fmtTime(s.last_login_at)}</p>
+                  </div>
+                  <div>
+                    <p className="text-white/40 mb-1">Date Joined</p>
+                    <p className="text-white/70">{fmt(s.created_at)}</p>
+                  </div>
+                </div>
 
-                    {/* Date joined */}
-                    <td className="px-4 py-4 text-white/40 text-xs whitespace-nowrap">
-                      {fmt(s.created_at)}
-                    </td>
-
-                    {/* Actions */}
-                    <td className="px-4 py-4">
-                      <div className="flex items-center gap-1.5 flex-wrap">
-                        {/* View Profile */}
-                        <button
-                          onClick={() => setModal({ type: 'view', data: s })}
-                          className="px-2.5 py-1.5 rounded-lg text-xs font-semibold text-purple-300 transition-all hover:bg-purple-500/15"
-                          style={{ border: '1px solid rgba(168,85,247,0.25)' }}
-                          title="View Profile">
-                          👤
-                        </button>
-
-                        {/* Edit */}
-                        <button
-                          onClick={() => setModal({ type: 'edit', data: s })}
-                          className="px-2.5 py-1.5 rounded-lg text-xs font-semibold text-blue-300 transition-all hover:bg-blue-500/15"
-                          style={{ border: '1px solid rgba(59,130,246,0.25)' }}>
-                          ✏️
-                        </button>
-
-                        {/* Suspend / Activate */}
-                        <button
-                          onClick={() => handleToggle(s)}
-                          disabled={toggling === s.id}
-                          className={`px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-all disabled:opacity-50 ${
-                            s.is_active
-                              ? 'text-yellow-300 hover:bg-yellow-500/15'
-                              : 'text-green-300 hover:bg-green-500/15'
-                          }`}
-                          style={{ border: `1px solid ${s.is_active ? 'rgba(234,179,8,0.25)' : 'rgba(34,197,94,0.25)'}` }}
-                          title={s.is_active ? 'Suspend' : 'Activate'}
-                        >
-                          {toggling === s.id ? '…' : s.is_active ? '⛔' : '✅'}
-                        </button>
-
-                        {/* Delete */}
-                        <button
-                          onClick={() => setModal({ type: 'delete', data: s })}
-                          className="px-2.5 py-1.5 rounded-lg text-xs font-semibold text-red-400 transition-all hover:bg-red-500/15"
-                          style={{ border: '1px solid rgba(239,68,68,0.25)' }}>
-                          🗑️
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                {/* Actions */}
+                <div className="flex gap-2 pt-2 border-t border-white/5 flex-wrap">
+                  <button
+                    onClick={() => setModal({ type: 'view', data: s })}
+                    className="flex-1 min-w-[100px] px-3 py-2.5 rounded-lg text-xs font-semibold text-purple-300 hover:bg-purple-500/15 transition-all"
+                    style={{ border: '1px solid rgba(168,85,247,0.25)' }}>
+                    👤 View
+                  </button>
+                  <button
+                    onClick={() => setModal({ type: 'edit', data: s })}
+                    className="flex-1 min-w-[100px] px-3 py-2.5 rounded-lg text-xs font-semibold text-blue-300 hover:bg-blue-500/15 transition-all"
+                    style={{ border: '1px solid rgba(59,130,246,0.25)' }}>
+                    ✏️ Edit
+                  </button>
+                  <button
+                    onClick={() => handleToggle(s)}
+                    disabled={toggling === s.id}
+                    className={`flex-1 min-w-[100px] px-3 py-2.5 rounded-lg text-xs font-semibold transition-all disabled:opacity-50 ${
+                      s.is_active
+                        ? 'text-yellow-300 hover:bg-yellow-500/15'
+                        : 'text-green-300 hover:bg-green-500/15'
+                    }`}
+                    style={{ border: `1px solid ${s.is_active ? 'rgba(234,179,8,0.25)' : 'rgba(34,197,94,0.25)'}` }}>
+                    {toggling === s.id ? '…' : s.is_active ? '⛔ Suspend' : '✅ Activate'}
+                  </button>
+                  <button
+                    onClick={() => setModal({ type: 'delete', data: s })}
+                    className="flex-1 min-w-[100px] px-3 py-2.5 rounded-lg text-xs font-semibold text-red-400 hover:bg-red-500/15 transition-all"
+                    style={{ border: '1px solid rgba(239,68,68,0.25)' }}>
+                    🗑️ Delete
+                  </button>
+                </div>
+              </div>
+            )}
+          />
         )}
       </Glass>
 

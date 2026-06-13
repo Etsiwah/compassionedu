@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import api from '../../utils/api';
+import AnnouncementReply from '../../components/AnnouncementReply';
 
 function timeAgo(d) {
   if (!d) return '';
@@ -114,6 +115,11 @@ export default function AnnouncementsSection() {
               {!a.is_read && (
                 <p className="text-[10px] text-orange-400/60 mt-2">Tap to mark as read</p>
               )}
+              
+              {/* Reply Component */}
+              <div className="mt-4 pt-4 border-t border-white/5">
+                <AnnouncementReply announcementId={a.id} onSuccess={() => {}} />
+              </div>
             </div>
           ))}
         </div>

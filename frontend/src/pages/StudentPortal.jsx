@@ -14,16 +14,16 @@ import AnnouncementsSection from './student/AnnouncementsSection';
 import HealthSection        from './student/HealthSection';
 
 const LINKS = [
-  { to: '/student/home',          label: 'Dashboard',      icon: '🏠' },
-  { to: '/student/profile',       label: 'Profile',        icon: '👤' },
-  { to: '/student/results',       label: 'Results',        icon: '📊' },
-  { to: '/student/fees',          label: 'Fees',           icon: '💳' },
-  { to: '/student/attendance',    label: 'Attendance',     icon: '📅' },
-  { to: '/student/activities',    label: 'Activities',     icon: '🏃' },
-  { to: '/student/portfolio',     label: 'Portfolio',      icon: '🗂️' },
-  { to: '/student/health',        label: 'Health',         icon: '🏥' },
-  { to: '/student/announcements', label: 'Announcements',  icon: '📢' },
-  { to: '/settings',              label: 'Settings',       icon: '⚙️' },
+  { to: '/student/home',          label: 'Dashboard',      iconName: 'LayoutDashboard' },
+  { to: '/student/profile',       label: 'Profile',        iconName: 'UserCircle' },
+  { to: '/student/results',       label: 'Results',        iconName: 'FileCheck' },
+  { to: '/student/fees',          label: 'Fees',           iconName: 'Wallet' },
+  { to: '/student/attendance',    label: 'Attendance',     iconName: 'CalendarDays' },
+  { to: '/student/activities',    label: 'Activities',     iconName: 'CalendarDays' },
+  { to: '/student/portfolio',     label: 'Portfolio',      iconName: 'FileCheck' },
+  { to: '/student/health',        label: 'Health',         iconName: 'HeartPulse' },
+  { to: '/student/announcements', label: 'Announcements',  iconName: 'Megaphone' },
+  { to: '/settings',              label: 'Settings',       iconName: 'Settings' },
 ];
 
 export default function StudentPortal() {

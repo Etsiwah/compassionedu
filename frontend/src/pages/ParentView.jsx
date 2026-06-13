@@ -14,11 +14,11 @@ import LoadingSpinner from '../components/common/LoadingSpinner';
 import ErrorMessage from '../components/common/ErrorMessage';
 
 const LINKS = [
-  { to: '/parent/dashboard',  label: 'Dashboard',  icon: '🏠' },
-  { to: '/parent/attendance', label: 'Attendance',  icon: '📅' },
-  { to: '/parent/results',    label: 'Results',     icon: '📊' },
-  { to: '/parent/fees',       label: 'Fees',        icon: '💳' },
-  { to: '/settings',          label: 'Settings',    icon: '⚙️' },
+  { to: '/parent/dashboard',  label: 'Dashboard',  iconName: 'LayoutDashboard' },
+  { to: '/parent/attendance', label: 'Attendance',  iconName: 'CalendarDays' },
+  { to: '/parent/results',    label: 'Results',     iconName: 'FileCheck' },
+  { to: '/parent/fees',       label: 'Fees',        iconName: 'Wallet' },
+  { to: '/settings',          label: 'Settings',    iconName: 'Settings' },
 ];
 
 /* ── Glassmorphism card wrapper ── */

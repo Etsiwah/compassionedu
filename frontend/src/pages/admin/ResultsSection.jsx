@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import api from '../../utils/api';
+import ResponsiveTable from '../../components/common/ResponsiveTable';
 
 function fmt(d) {
   if (!d) return '—';
@@ -253,64 +254,109 @@ export default function AdminResultsSection() {
             <p className="text-white/30 text-sm">No uploads found.</p>
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
-                  {['Student','Level / Period','File','Status','Score','Uploaded','Actions'].map(h => (
-                    <th key={h} className="text-left px-4 py-3.5 text-xs font-semibold text-white/35 uppercase tracking-wide whitespace-nowrap">{h}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {uploads.map((u, i) => (
-                  <tr key={u.id} className="hover:bg-white/3 transition-colors"
-                    style={{ borderBottom: i < uploads.length - 1 ? '1px solid rgba(255,255,255,0.04)' : 'none' }}>
-                    <td className="px-4 py-4">
-                      <p className="font-semibold text-white/90">{u.student_name}</p>
-                      <p className="text-xs text-white/40">{u.student_email}</p>
-                    </td>
-                    <td className="px-4 py-4">
-                      <p className="text-white/70 text-xs">{u.academic_level}</p>
-                      <p className="text-white/40 text-xs">{u.year_label} · {u.period_label}</p>
-                    </td>
-                    <td className="px-4 py-4">
-                      <a href={u.file_url} target="_blank" rel="noreferrer"
-                        className="text-xs text-blue-400 hover:text-blue-300 font-semibold">
-                        👁 View
-                      </a>
-                    </td>
-                    <td className="px-4 py-4"><StatusBadge status={u.status} /></td>
-                    <td className="px-4 py-4">
-                      {u.performance_score != null ? (
-                        <div className="flex items-center gap-1.5">
-                          <span className="text-xs font-bold text-white/80">{u.performance_score}%</span>
-                          <PerfBadge category={u.performance_category} />
-                        </div>
-                      ) : '—'}
-                    </td>
-                    <td className="px-4 py-4 text-white/40 text-xs whitespace-nowrap">{fmt(u.uploaded_at)}</td>
-                    <td className="px-4 py-4">
-                      {u.status === 'pending' && (
-                        <button onClick={() => setReviewing(u)}
-                          className="px-3 py-1.5 rounded-lg text-xs font-semibold text-orange-300 hover:bg-orange-500/15 transition-all"
-                          style={{ border: '1px solid rgba(249,115,22,0.25)' }}>
-                          Review
-                        </button>
-                      )}
-                      {u.status !== 'pending' && (
-                        <button onClick={() => setReviewing(u)}
-                          className="px-3 py-1.5 rounded-lg text-xs font-semibold text-white/40 hover:text-white/70 transition-all"
-                          style={{ border: '1px solid rgba(255,255,255,0.1)' }}>
-                          Edit
-                        </button>
-                      )}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <ResponsiveTable
+            headers={['Student','Level / Period','File','Status','Score','Uploaded','Actions']}
+            data={uploads}
+            emptyMessage="No uploads found."
+            renderRow={(u, i) => (
+              <>
+                <td className="px-4 py-4">
+                  <p className="font-semibold text-white/90">{u.student_name}</p>
+                  <p className="text-xs text-white/40">{u.student_email}</p>
+                </td>
+                <td className="px-4 py-4">
+                  <p className="text-white/70 text-xs">{u.academic_level}</p>
+                  <p className="text-white/40 text-xs">{u.year_label} · {u.period_label}</p>
+                </td>
+                <td className="px-4 py-4">
+                  <a href={u.file_url} target="_blank" rel="noreferrer"
+                    className="text-xs text-blue-400 hover:text-blue-300 font-semibold">
+                    👁 View
+                  </a>
+                </td>
+                <td className="px-4 py-4"><StatusBadge status={u.status} /></td>
+                <td className="px-4 py-4">
+                  {u.performance_score != null ? (
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-xs font-bold text-white/80">{u.performance_score}%</span>
+                      <PerfBadge category={u.performance_category} />
+                    </div>
+                  ) : '—'}
+                </td>
+                <td className="px-4 py-4 text-white/40 text-xs whitespace-nowrap">{fmt(u.uploaded_at)}</td>
+                <td className="px-4 py-4">
+                  {u.status === 'pending' && (
+                    <button onClick={() => setReviewing(u)}
+                      className="px-3 py-1.5 rounded-lg text-xs font-semibold text-orange-300 hover:bg-orange-500/15 transition-all"
+                      style={{ border: '1px solid rgba(249,115,22,0.25)' }}>
+                      Review
+                    </button>
+                  )}
+                  {u.status !== 'pending' && (
+                    <button onClick={() => setReviewing(u)}
+                      className="px-3 py-1.5 rounded-lg text-xs font-semibold text-white/40 hover:text-white/70 transition-all"
+                      style={{ border: '1px solid rgba(255,255,255,0.1)' }}>
+                      Edit
+                    </button>
+                  )}
+                </td>
+              </>
+            )}
+            renderMobileCard={(u) => (
+              <div className="space-y-3">
+                {/* Student Info */}
+                <div className="flex items-start justify-between gap-2">
+                  <div className="flex-1 min-w-0">
+                    <p className="font-semibold text-white/90 text-sm">{u.student_name}</p>
+                    <p className="text-xs text-white/50 mt-0.5 truncate">{u.student_email}</p>
+                    <div className="mt-2">
+                      <StatusBadge status={u.status} />
+                    </div>
+                  </div>
+                  {u.performance_score != null && (
+                    <div className="flex flex-col items-end gap-1">
+                      <span className="text-lg font-bold text-white/90">{u.performance_score}%</span>
+                      <PerfBadge category={u.performance_category} />
+                    </div>
+                  )}
+                </div>
+
+                {/* Details Grid */}
+                <div className="grid grid-cols-2 gap-3 text-xs">
+                  <div>
+                    <p className="text-white/40 mb-1">Level</p>
+                    <p className="text-white/70">{u.academic_level}</p>
+                  </div>
+                  <div>
+                    <p className="text-white/40 mb-1">Period</p>
+                    <p className="text-white/70">{u.year_label} · {u.period_label}</p>
+                  </div>
+                  <div className="col-span-2">
+                    <p className="text-white/40 mb-1">Uploaded</p>
+                    <p className="text-white/70">{fmt(u.uploaded_at)}</p>
+                  </div>
+                </div>
+
+                {/* Actions */}
+                <div className="flex gap-2 pt-2 border-t border-white/5">
+                  <a href={u.file_url} target="_blank" rel="noreferrer"
+                    className="flex-1 text-center px-3 py-2.5 rounded-lg text-xs font-semibold text-blue-300 hover:bg-blue-500/15 transition-all"
+                    style={{ border: '1px solid rgba(59,130,246,0.25)' }}>
+                    👁 View File
+                  </a>
+                  <button onClick={() => setReviewing(u)}
+                    className={`flex-1 px-3 py-2.5 rounded-lg text-xs font-semibold transition-all ${
+                      u.status === 'pending'
+                        ? 'text-orange-300 hover:bg-orange-500/15'
+                        : 'text-white/40 hover:text-white/70'
+                    }`}
+                    style={{ border: `1px solid ${u.status === 'pending' ? 'rgba(249,115,22,0.25)' : 'rgba(255,255,255,0.1)'}` }}>
+                    {u.status === 'pending' ? '✏️ Review' : '✏️ Edit'}
+                  </button>
+                </div>
+              </div>
+            )}
+          />
         )}
       </div>
 

@@ -121,7 +121,126 @@ async function sendWelcomeEmail(email, name) {
   }
 }
 
+/**
+ * Send announcement emails to recipients
+ * @param {Object} announcement - The announcement object with id, title, content, created_at, created_by
+ * @param {Array} recipients - Array of recipient objects with id, email, name, role
+ * @returns {Promise<void>}
+ */
+async function sendAnnouncementEmails(announcement, recipients) {
+  const { id, title, content, created_by, created_at } = announcement;
+
+  // Get creator name from database
+  const pool = require('../db/pool');
+  let creatorName = 'Administrator';
+  try {
+    const { rows } = await pool.query(
+      `SELECT name FROM users WHERE id = $1`,
+      [created_by]
+    );
+    if (rows.length > 0) {
+      creatorName = rows[0].name;
+    }
+  } catch (err) {
+    console.error('Error fetching creator name:', err);
+  }
+
+  // Build email subject
+  const subject = `New Announcement: ${title}`;
+
+  // Generate view link
+  const viewLink = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/announcements/${id}`;
+
+  // Format date
+  const formattedDate = new Date(created_at).toLocaleString('en-US', {
+    weekday: 'long',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit'
+  });
+
+  // Build HTML email body
+  const htmlBody = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    </head>
+    <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+      <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px; text-align: center; border-radius: 10px 10px 0 0;">
+        <h1 style="color: white; margin: 0;">New Announcement</h1>
+      </div>
+      <div style="background: #f9f9f9; padding: 30px; border-radius: 0 0 10px 10px;">
+        <h2 style="color: #333; margin-top: 0;">New Announcement from ${creatorName}</h2>
+        <div style="background: #ffffff; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #f97316;">
+          <h3 style="color: #333; margin-top: 0;">${title}</h3>
+          <p style="color: #666; white-space: pre-wrap;">${content}</p>
+        </div>
+        <p style="color: #999; font-size: 14px; margin-bottom: 20px;">
+          Posted on: ${formattedDate}
+        </p>
+        <div style="text-align: center; margin: 30px 0;">
+          <a href="${viewLink}" style="background: #f97316; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; display: inline-block; font-weight: bold;">View in System</a>
+        </div>
+      </div>
+      <div style="text-align: center; margin-top: 20px; color: #999; font-size: 12px;">
+        <p style="margin: 5px 0;">© ${new Date().getFullYear()} CompassionEdu · Releasing Children from Poverty in Jesus' Name</p>
+        <p style="margin: 5px 0;">This is an automated message. Please do not reply to this email.</p>
+      </div>
+    </body>
+    </html>
+  `;
+
+  // Remove duplicate email addresses from recipient list
+  const uniqueEmails = [...new Set(recipients.map(r => r.email).filter(e => e && e.trim()))];
+
+  console.log(`Preparing to send announcement emails to ${uniqueEmails.length} unique recipients`);
+
+  // Send emails in batches of 50 to avoid rate limits
+  const BATCH_SIZE = 50;
+  let successCount = 0;
+  let failureCount = 0;
+
+  for (let i = 0; i < uniqueEmails.length; i += BATCH_SIZE) {
+    const batch = uniqueEmails.slice(i, i + BATCH_SIZE);
+    
+    // Use Promise.allSettled to handle individual failures gracefully
+    const results = await Promise.allSettled(
+      batch.map(email =>
+        transporter.sendMail({
+          from: `"CompassionEdu" <${process.env.SMTP_USER}>`,
+          to: email,
+          subject: subject,
+          html: htmlBody
+        })
+      )
+    );
+
+    // Log results for this batch
+    results.forEach((result, index) => {
+      if (result.status === 'fulfilled') {
+        successCount++;
+      } else {
+        failureCount++;
+        console.error(`Failed to send email to ${batch[index]}:`, result.reason);
+      }
+    });
+
+    // Small delay between batches to respect rate limits
+    if (i + BATCH_SIZE < uniqueEmails.length) {
+      await new Promise(resolve => setTimeout(resolve, 1000));
+    }
+  }
+
+  // Log email sending results
+  console.log(`Announcement email sending complete: ${successCount} succeeded, ${failureCount} failed out of ${uniqueEmails.length} total recipients`);
+}
+
 module.exports = {
   sendPasswordResetEmail,
   sendWelcomeEmail,
+  sendAnnouncementEmails,
 };
