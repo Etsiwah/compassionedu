@@ -144,7 +144,17 @@ app.use((req, res, next) => {
   if (req.path.startsWith('/api/') || req.path.startsWith('/uploads/') || req.path.startsWith('/files/')) {
     return res.status(404).json({ error: 'Resource not found' });
   }
-  // Otherwise, fallback to the React app so client-side routing works
+  
+  // In production, frontend is deployed separately on Vercel - return simple status
+  if (process.env.NODE_ENV === 'production') {
+    return res.status(200).json({ 
+      status: 'ok', 
+      message: 'CompassionEdu API is running', 
+      frontend: process.env.FRONTEND_URL || 'https://compassion-project-kappa.vercel.app'
+    });
+  }
+  
+  // In development, serve the built frontend if available
   res.sendFile(path.join(frontendPath, 'index.html'), (err) => {
     if (err) res.status(404).send('Frontend not built. Run npm run build in frontend directory.');
   });
