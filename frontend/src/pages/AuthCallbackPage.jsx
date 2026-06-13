@@ -33,65 +33,48 @@ export default function AuthCallbackPage() {
         case 'account_inactive':
           errorMessage = 'Your account has been deactivated.';
           break;
+        default:
+          errorMessage = error;
       }
       
-      navigate(`/login?error=${encodeURIComponent(errorMessage)}`);
+      navigate(`/login?error=${encodeURIComponent(errorMessage)}`, { replace: true });
       return;
     }
 
     if (token && refreshToken) {
-      // Decode token to get basic user info
       try {
+        // Decode JWT token to get user info (now includes name and email in payload)
         const payload = JSON.parse(atob(token.split('.')[1]));
         
-        // Fetch full user details from the API
-        fetch(`/api/users/me`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        })
-          .then((res) => {
-            if (!res.ok) throw new Error('Failed to fetch user details');
-            return res.json();
-          })
-          .then((userData) => {
-            const user = {
-              id: userData.id,
-              role: userData.role,
-              name: userData.name,
-              email: userData.email,
-            };
+        const user = {
+          id: payload.sub,
+          role: payload.role,
+          name: payload.name || 'User',
+          email: payload.email || '',
+        };
 
-            // Log in the user
-            login(token, user, refreshToken);
+        // Log in the user with tokens and user info
+        login(token, user, refreshToken);
 
-            // Redirect to appropriate dashboard
-            navigate(ROLE_REDIRECT[user.role] || '/login', { replace: true });
-          })
-          .catch((err) => {
-            console.error('Failed to fetch user details:', err);
-            // Fallback to minimal user object from token
-            const user = {
-              id: payload.sub,
-              role: payload.role,
-            };
-            login(token, user, refreshToken);
-            navigate(ROLE_REDIRECT[user.role] || '/login', { replace: true });
-          });
+        // Redirect to appropriate dashboard
+        navigate(ROLE_REDIRECT[user.role] || '/login', { replace: true });
       } catch (err) {
         console.error('Failed to parse token:', err);
-        navigate('/login?error=Authentication failed');
+        navigate('/login?error=' + encodeURIComponent('Authentication failed'), { replace: true });
       }
     } else {
-      navigate('/login?error=Authentication failed');
+      navigate('/login?error=' + encodeURIComponent('Authentication failed'), { replace: true });
     }
   }, [searchParams, navigate, login]);
 
   return (
-    <div className="min-h-screen flex items-center justify-center">
+    <div className="min-h-screen flex items-center justify-center"
+      style={{ 
+        background: 'linear-gradient(135deg, #0a0f23 0%, #0f1a35 50%, #0a0f23 100%)'
+      }}>
       <div className="text-center">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500 mx-auto mb-4"></div>
-        <p className="text-gray-600">Completing sign in...</p>
+        <p className="text-white/70">Completing sign in...</p>
       </div>
     </div>
   );

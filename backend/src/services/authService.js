@@ -117,7 +117,12 @@ async function login(email, password) {
  */
 async function issueTokens(user) {
   const accessToken = jwt.sign(
-    { sub: user.id, role: user.role },
+    { 
+      sub: user.id, 
+      role: user.role,
+      name: user.name,
+      email: user.email
+    },
     ACCESS_TOKEN_SECRET,
     { expiresIn: ACCESS_TOKEN_EXPIRY }
   );

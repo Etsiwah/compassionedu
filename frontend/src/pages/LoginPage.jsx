@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import useAuth from '../hooks/useAuth';
 import api from '../utils/api';
 
@@ -104,6 +104,7 @@ function PasswordStrength({ password }) {
 export default function LoginPage() {
   const { login } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [tab, setTab] = useState('signin'); // 'signin' | 'signup'
 
   // Sign-in state
@@ -126,6 +127,18 @@ export default function LoginPage() {
   const [suSuccess,    setSuSuccess]    = useState('');
   const [showSuPassword, setShowSuPassword] = useState(false);
   const [showSuConfirm, setShowSuConfirm] = useState(false);
+
+  // Handle error parameter from URL (e.g., from OAuth callback)
+  useEffect(() => {
+    const error = searchParams.get('error');
+    if (error) {
+      setSiError(decodeURIComponent(error));
+      // Clear the error parameter from URL
+      const newSearchParams = new URLSearchParams(searchParams);
+      newSearchParams.delete('error');
+      navigate({  search: newSearchParams.toString() }, { replace: true });
+    }
+  }, [searchParams, navigate]);
 
   async function doLogin(email, password) {
     setSiError('');
