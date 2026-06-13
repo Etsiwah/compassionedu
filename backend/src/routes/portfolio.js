@@ -109,14 +109,34 @@ const mediaStorage = multer.diskStorage({
   },
 });
 
+function mediaFileFilter(_req, file, cb) {
+  // Allow images, videos, PDFs, and documents for portfolio media
+  const allowed = [
+    'image/jpeg', 'image/png', 'image/jpg', 'image/webp', 'image/gif',
+    'video/mp4', 'video/quicktime', 'video/webm', 'video/x-msvideo',
+    'application/pdf',
+    'application/msword',
+    'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+  ];
+  if (allowed.includes(file.mimetype)) {
+    return cb(null, true);
+  }
+  const err = new Error('Only images, videos, PDFs, and document files are allowed');
+  err.status = 422;
+  err.field = 'file';
+  cb(err, false);
+}
+
 const mediaUpload = multer({
   storage: mediaStorage,
+  fileFilter: mediaFileFilter,
   limits: { fileSize: MAX_MEDIA_SIZE_BYTES },
 });
 
 /**
  * Wraps multer media upload to convert LIMIT_FILE_SIZE errors to the standard
- * 422 shape.
+ * 422 shape and surface MIME type rejections correctly.
  */
 function uploadMediaMiddleware(req, res, next) {
   mediaUpload.single('media')(req, res, (err) => {
@@ -127,6 +147,10 @@ function uploadMediaMiddleware(req, res, next) {
         error: `Media file must not exceed ${MAX_MEDIA_SIZE_MB}MB`,
         field: 'file',
       });
+    }
+
+    if (err.status === 422) {
+      return res.status(422).json({ error: err.message, field: 'file' });
     }
 
     next(err);

@@ -27,9 +27,15 @@ const storage = multer.diskStorage({
   },
 });
 const fileFilter = (_req, file, cb) => {
-  const allowed = ['application/pdf', 'image/jpeg', 'image/png', 'image/jpg'];
+  // Allow images, PDFs, and document files for health records
+  const allowed = [
+    'application/pdf',
+    'image/jpeg', 'image/png', 'image/jpg', 'image/webp',
+    'application/msword',
+    'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  ];
   if (allowed.includes(file.mimetype)) return cb(null, true);
-  const err = new Error('Only PDF, JPG, and PNG files are allowed');
+  const err = new Error('Only PDF, images, and Word document files are allowed');
   err.status = 422;
   cb(err, false);
 };

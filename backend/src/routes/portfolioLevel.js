@@ -36,9 +36,17 @@ const cvFilter = (_req, file, cb) => {
 };
 
 const mediaFilter = (_req, file, cb) => {
-  const ok = ['image/jpeg','image/png','image/jpg','image/webp','video/mp4','application/pdf'];
+  // Allow images, videos, PDFs, and documents for portfolio level projects
+  const ok = [
+    'image/jpeg', 'image/png', 'image/jpg', 'image/webp', 'image/gif',
+    'video/mp4', 'video/quicktime', 'video/webm',
+    'application/pdf',
+    'application/msword',
+    'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+  ];
   if (ok.includes(file.mimetype)) return cb(null, true);
-  const e = new Error('Unsupported file type'); e.status = 422; cb(e, false);
+  const e = new Error('Only images, videos, PDFs, and document files are allowed'); e.status = 422; cb(e, false);
 };
 
 const cvUpload = multer({ storage, fileFilter: cvFilter, limits: { fileSize: MAX_CV_SIZE_MB * 1024 * 1024 } });

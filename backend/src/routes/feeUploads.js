@@ -24,10 +24,17 @@ const storage = multer.diskStorage({
   },
 });
 const fileFilter = (_req, file, cb) => {
-  const ext = path.extname(file.originalname).toLowerCase();
-  const blocked = new Set(['.exe', '.bat', '.cmd', '.com', '.msi', '.scr', '.ps1', '.vbs', '.js', '.jar']);
-  if (!blocked.has(ext)) return cb(null, true);
-  const err = new Error('This file type is not allowed for security reasons');
+  // Allow images and document files for fee receipts
+  const allowed = [
+    'application/pdf',
+    'image/jpeg', 'image/png', 'image/jpg', 'image/webp',
+    'application/msword',
+    'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    'application/vnd.ms-excel',
+    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+  ];
+  if (allowed.includes(file.mimetype)) return cb(null, true);
+  const err = new Error('Only PDF, images, Word, and Excel files are allowed');
   err.status = 422; cb(err, false);
 };
 const upload = multer({ storage, fileFilter, limits: { fileSize: 20 * 1024 * 1024 } });
