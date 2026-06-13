@@ -90,6 +90,19 @@ app.get('/api/health', (_req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
+// ── Environment check endpoint (temporary for debugging) ─────────────────────
+app.get('/api/env-check', (_req, res) => {
+  res.json({
+    hasGoogleClientId: !!process.env.GOOGLE_CLIENT_ID,
+    hasGoogleClientSecret: !!process.env.GOOGLE_CLIENT_SECRET,
+    hasBackendUrl: !!process.env.BACKEND_URL,
+    hasFrontendUrl: !!process.env.FRONTEND_URL,
+    backendUrl: process.env.BACKEND_URL || 'NOT SET',
+    frontendUrl: process.env.FRONTEND_URL || 'NOT SET',
+    nodeEnv: process.env.NODE_ENV || 'NOT SET',
+  });
+});
+
 // ── One-time seed endpoint (protected by secret key) ─────────────────────────
 // Call: GET /api/setup-seed?key=YOUR_JWT_SECRET
 // Use this to seed demo accounts on Render when Shell is unavailable
