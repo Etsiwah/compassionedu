@@ -178,7 +178,7 @@ export default function Sidebar({ links, title }) {
       >
         {/* Optional section title */}
         {title && (
-          <div className="px-3 mb-6 mt-12 lg:mt-0">
+          <div className="px-3 mb-6 mt-12 lg:mt-0 flex-shrink-0">
             <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-orange-400/60 mb-1">
               {title}
             </p>
@@ -186,7 +186,7 @@ export default function Sidebar({ links, title }) {
           </div>
         )}
 
-        <nav className="flex flex-col gap-1">
+        <nav className="flex flex-col gap-1 overflow-y-auto flex-1 pr-1 custom-scrollbar" style={{ scrollbarWidth: 'thin', scrollbarColor: 'rgba(251, 146, 60, 0.5) transparent' }}>
           {links.map(({ to, label, iconName }) => {
             const IconComponent = Icons[iconName] || Icons.LayoutDashboard;
             
