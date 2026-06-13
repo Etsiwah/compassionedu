@@ -14,6 +14,10 @@ const rateLimit = require('express-rate-limit');
 
 const app = express();
 
+// ── Trust Proxy (required for Render/Heroku/AWS load balancers) ──────────────
+// This allows express-rate-limit and other middleware to correctly identify client IPs
+app.set('trust proxy', 1);
+
 // ── Security Headers ──────────────────────────────────────────────────────────
 app.use(helmet());
 
