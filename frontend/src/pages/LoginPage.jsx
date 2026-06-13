@@ -421,7 +421,12 @@ export default function LoginPage() {
                 {/* Google Sign In Button */}
                 <button
                   type="button"
-                  onClick={() => window.location.href = `${process.env.REACT_APP_API_URL || 'http://localhost:4000'}/api/auth/google`}
+                  onClick={() => {
+                    const backendUrl = process.env.REACT_APP_API_URL 
+                      ? process.env.REACT_APP_API_URL.replace('/api', '')
+                      : 'http://localhost:4000';
+                    window.location.href = `${backendUrl}/api/auth/google`;
+                  }}
                   className="w-full flex items-center justify-center gap-3 rounded-lg py-2.5 text-sm font-medium transition-all hover:opacity-90"
                   style={{
                     background: 'rgba(255,255,255,0.95)',
@@ -648,7 +653,12 @@ export default function LoginPage() {
                 {/* Google Sign Up Button */}
                 <button
                   type="button"
-                  onClick={() => window.location.href = `${process.env.REACT_APP_API_URL || 'http://localhost:4000'}/api/auth/google`}
+                  onClick={() => {
+                    const backendUrl = process.env.REACT_APP_API_URL 
+                      ? process.env.REACT_APP_API_URL.replace('/api', '')
+                      : 'http://localhost:4000';
+                    window.location.href = `${backendUrl}/api/auth/google`;
+                  }}
                   className="w-full flex items-center justify-center gap-3 rounded-lg py-2.5 text-sm font-medium transition-all hover:opacity-90"
                   style={{
                     background: 'rgba(255,255,255,0.95)',
